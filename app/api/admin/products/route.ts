@@ -1,28 +1,58 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { getProducts, createProduct } from "@/lib/mongodb"
+// app/api/admin/products/route.ts
+import { NextResponse } from "next/server";
+import { getProducts, createProduct } from "@/lib/mongodb"; // Assuming your lib/mongodb.ts is in the root lib folder
 
-export async function GET(request: NextRequest) {
+// GET handler for fetching products
+export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const category = searchParams.get("category") || undefined
-    const search = searchParams.get("search") || undefined
-    const featured = searchParams.get("featured") ? searchParams.get("featured") === "true" : undefined
+    const { searchParams } = new URL(request.url);
+    const category = searchParams.get("category") || undefined;
+    const search = searchParams.get("search") || undefined;
+    const featured = searchParams.has("featured")
+      ? searchParams.get("featured") === "true"
+      : undefined;
 
-    const products = await getProducts(category, search, featured)
-    return NextResponse.json(products)
+    const products = await getProducts(category, search, featured);
+    // In the previous example, products were returned directly.
+    // Your frontend expects the raw array, which is fine.
+    // If you wanted to stick to a { success: true, data: products } structure,
+    // you would need to adjust your frontend to access `data.data`.
+    // For now, returning the array directly matches your frontend's expectation.
+    return NextResponse.json(products);
   } catch (error) {
-    console.error("Error in GET /api/admin/products:", error)
-    return NextResponse.json({ error: "Failed to fetch products" }, { status: 500 })
+    console.error("Failed to fetch products:", error);
+    return NextResponse.json(
+      { message: "Failed to fetch products", error: (error as Error).message },
+      { status: 500 }
+    );
   }
 }
 
-export async function POST(request: NextRequest) {
+// POST handler for creating a new product
+export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const product = await createProduct(body)
-    return NextResponse.json(product)
+    const productData = await request.json();
+
+    if (
+      !productData.name_en ||
+      !productData.name_es ||
+      !productData.price ||
+      !productData.category_en ||
+      !productData.category_es
+    ) {
+      return NextResponse.json(
+        { message: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    const newProduct = await createProduct(productData);
+    return NextResponse.json(newProduct, { status: 201 });
   } catch (error) {
-    console.error("Error in POST /api/admin/products:", error)
-    return NextResponse.json({ error: "Failed to create product" }, { status: 500 })
+    console.error("Failed to create product:", error);
+    return NextResponse.json(
+      { message: "Failed to create product", error: (error as Error).message },
+      { status: 500 }
+    );
   }
 }
