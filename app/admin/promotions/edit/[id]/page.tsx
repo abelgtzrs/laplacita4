@@ -1,35 +1,69 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { AdminLayout } from "@/components/admin-layout";
-import { ArrowLeft, Save } from "lucide-react"; // Removed Upload, not used directly here
+import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image"; // For image preview
+import Image from "next/image";
 
-export default function AddProductPage() {
+export default function EditPromotionPage({
+  params,
+}: {
+  params: { id: string };
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-
   const [formData, setFormData] = useState({
-    name_en: "",
-    name_es: "",
+    title_en: "",
+    title_es: "",
     description_en: "",
     description_es: "",
-    price: "",
-    category_en: "",
-    category_es: "",
-    // image_url is now handled by imageFile
-    is_featured: false,
+    image_url: "",
+    active_from: "",
+    active_to: "",
   });
+
+  useEffect(() => {
+    async function fetchPromotion() {
+      try {
+        const response = await fetch(`/api/admin/promotions/${params.id}`);
+        if (response.ok) {
+          const promotion = await response.json();
+          setFormData({
+            title_en: promotion.title_en,
+            title_es: promotion.title_es,
+            description_en: promotion.description_en || "",
+            description_es: promotion.description_es || "",
+            image_url: promotion.image_url || "",
+            // Format dates for the input[type=date] which expects YYYY-MM-DD
+            active_from: promotion.active_from
+              ? new Date(promotion.active_from).toISOString().split("T")[0]
+              : "",
+            active_to: promotion.active_to
+              ? new Date(promotion.active_to).toISOString().split("T")[0]
+              : "",
+          });
+          if (promotion.image_url) {
+            setImagePreview(promotion.image_url);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching promotion:", error);
+      } finally {
+        setInitialLoading(false);
+      }
+    }
+    fetchPromotion();
+  }, [params.id]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -43,9 +77,6 @@ export default function AddProductPage() {
       const file = e.target.files[0];
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
-    } else {
-      setImageFile(null);
-      setImagePreview(null);
     }
   };
 
@@ -53,163 +84,124 @@ export default function AddProductPage() {
     e.preventDefault();
     setLoading(true);
 
+    // Using FormData for potential file upload
     const submissionData = new FormData();
-    // Append all text fields from formData
     Object.entries(formData).forEach(([key, value]) => {
-      submissionData.append(key, String(value));
+      submissionData.append(key, value);
     });
-
     if (imageFile) {
       submissionData.append("image_file", imageFile);
     }
-    // Ensure price is appended correctly if it was part of formData and needs specific formatting
-    // submissionData.append("price", formData.price); // Already handled by Object.entries if price is a string
+    // API Route will handle parsing dates from string
+    submissionData.set("active_from", formData.active_from);
+    submissionData.set("active_to", formData.active_to);
 
     try {
-      const response = await fetch("/api/admin/products", {
-        method: "POST",
-        body: submissionData, // No 'Content-Type' header needed for FormData, browser sets it
+      const response = await fetch(`/api/admin/promotions/${params.id}`, {
+        method: "PUT", // Use PUT for updates
+        body: submissionData,
       });
 
       if (response.ok) {
-        router.push("/admin/products");
+        router.push("/admin/promotions");
       } else {
         const errorData = await response.json();
-        alert(
-          `Error al crear el producto: ${
-            errorData.message || "Error desconocido"
-          }`
-        );
+        alert(`Error al actualizar la promoción: ${errorData.message}`);
       }
     } catch (error) {
-      console.error("Error creating product:", error);
-      alert(
-        `Error al crear el producto: ${
-          error instanceof Error ? error.message : "Error de red"
-        }`
-      );
+      console.error("Error:", error);
+      alert("Error al actualizar la promoción");
     } finally {
       setLoading(false);
     }
   };
+
+  if (initialLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
       <div className="space-y-6">
         <div className="flex items-center space-x-4">
           <Button asChild variant="outline" size="sm">
-            <Link href="/admin/products">
+            <Link href="/admin/promotions">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Volver
             </Link>
           </Button>
-          <h1 className="text-3xl font-bold text-gray-900">Agregar Producto</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Editar Promoción</h1>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Información del Producto</CardTitle>
+            <CardTitle>Información de la Promoción</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Name Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nombre (Inglés) *
+                    Título (Inglés) *
                   </label>
                   <Input
-                    name="name_en"
-                    value={formData.name_en}
+                    name="title_en"
+                    value={formData.title_en}
                     onChange={handleInputChange}
                     required
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nombre (Español) *
+                    Título (Español) *
                   </label>
                   <Input
-                    name="name_es"
-                    value={formData.name_es}
+                    name="title_es"
+                    value={formData.title_es}
                     onChange={handleInputChange}
                     required
                   />
                 </div>
               </div>
 
-              {/* Description Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Descripción (Inglés)
+                    Descripción (Inglés) *
                   </label>
                   <Textarea
                     name="description_en"
                     value={formData.description_en}
                     onChange={handleInputChange}
-                    rows={3}
+                    rows={4}
+                    required
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Descripción (Español)
+                    Descripción (Español) *
                   </label>
                   <Textarea
                     name="description_es"
                     value={formData.description_es}
                     onChange={handleInputChange}
-                    rows={3}
-                  />
-                </div>
-              </div>
-
-              {/* Price and Category Fields */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Precio *
-                  </label>
-                  <Input
-                    name="price"
-                    type="number"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Categoría (Inglés) *
-                  </label>
-                  <Input
-                    name="category_en"
-                    value={formData.category_en}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Categoría (Español) *
-                  </label>
-                  <Input
-                    name="category_es"
-                    value={formData.category_es}
-                    onChange={handleInputChange}
+                    rows={4}
                     required
                   />
                 </div>
               </div>
 
-              {/* Image Upload Field */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Imagen del Producto
+                  Imagen de la Promoción
                 </label>
                 <Input
-                  name="image_file"
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
@@ -219,39 +211,45 @@ export default function AddProductPage() {
                   <div className="mt-4">
                     <Image
                       src={imagePreview}
-                      alt="Previsualización de la imagen"
-                      width={128}
-                      height={128}
-                      className="h-32 w-auto rounded-md border object-contain"
+                      alt="Previsualización"
+                      width={200}
+                      height={112}
+                      className="rounded-md border object-contain"
                     />
                   </div>
                 )}
               </div>
 
-              {/* Is Featured Checkbox */}
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="is_featured"
-                  checked={formData.is_featured}
-                  onCheckedChange={(checked) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      is_featured: Boolean(checked),
-                    }))
-                  }
-                />
-                <label
-                  htmlFor="is_featured"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Producto destacado
-                </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Fecha de Inicio *
+                  </label>
+                  <Input
+                    name="active_from"
+                    type="date"
+                    value={formData.active_from}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Fecha de Fin *
+                  </label>
+                  <Input
+                    name="active_to"
+                    type="date"
+                    value={formData.active_to}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex justify-end space-x-4">
                 <Button type="button" variant="outline" asChild>
-                  <Link href="/admin/products">Cancelar</Link>
+                  <Link href="/admin/promotions">Cancelar</Link>
                 </Button>
                 <Button
                   type="submit"
@@ -259,11 +257,11 @@ export default function AddProductPage() {
                   className="bg-green-600 hover:bg-green-700"
                 >
                   {loading ? (
-                    "Guardando..."
+                    "Actualizando..."
                   ) : (
                     <>
                       <Save className="h-4 w-4 mr-2" />
-                      Guardar Producto
+                      Actualizar Promoción
                     </>
                   )}
                 </Button>

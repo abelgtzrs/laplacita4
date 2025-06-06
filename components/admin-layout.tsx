@@ -1,39 +1,39 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useEffect, useState } from "react"
-import { useRouter, usePathname } from "next/navigation"
-import Link from "next/link"
-import { LogOut, Package, Tag, MessageSquare } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { useLanguage } from "@/contexts/language-context"
+import { useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
+import { LogOut, Package, Tag, MessageSquare } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/language-context";
 
 interface AdminLayoutProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
-  const { t } = useLanguage()
-  const router = useRouter()
-  const pathname = usePathname()
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const { t } = useLanguage();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const authStatus = localStorage.getItem("adminAuth")
+    const authStatus = localStorage.getItem("adminAuth");
     if (authStatus === "true") {
-      setIsAuthenticated(true)
+      setIsAuthenticated(true);
     } else {
-      router.push("/admin/login")
+      router.push("/admin/login");
     }
-    setIsLoading(false)
-  }, [router])
+    setIsLoading(false);
+  }, [router]);
 
   const handleLogout = () => {
-    localStorage.removeItem("adminAuth")
-    router.push("/admin/login")
-  }
+    localStorage.removeItem("adminAuth");
+    router.push("/admin/login");
+  };
 
   const navigation = [
     {
@@ -54,18 +54,18 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       icon: MessageSquare,
       current: pathname.startsWith("/admin/communications"),
     },
-  ]
+  ];
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
       </div>
-    )
+    );
   }
 
   if (!isAuthenticated) {
-    return null
+    return null;
   }
 
   return (
@@ -76,12 +76,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <Link href="/" className="flex items-center space-x-2">
-                <div className="bg-gradient-to-r from-green-600 to-red-600 text-white px-3 py-1 rounded font-bold">
+                <div className="text-black px-3 py-1 rounded font-bold">
                   La Placita FTP
                 </div>
               </Link>
               <span className="text-gray-400">|</span>
-              <span className="text-gray-600 font-medium">Panel de Administración</span>
+              <span className="text-gray-600 font-medium">
+                Panel de Administración
+              </span>
             </div>
 
             <Button
@@ -124,5 +126,5 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <main className="flex-1 p-8">{children}</main>
       </div>
     </div>
-  )
+  );
 }

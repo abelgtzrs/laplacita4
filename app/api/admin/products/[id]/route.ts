@@ -1,9 +1,17 @@
-// app/api/products/[id]/route.ts
+// app/api/admin/products/[id]/route.ts
 
-import { NextResponse } from "next/server";
-import { getProductById, updateProduct, deleteProduct } from "@/lib/mongodb";
+import { NextResponse, type NextRequest } from "next/server";
+import {
+  getProductById,
+  updateProduct,
+  deleteProduct,
+  type Product,
+} from "@/lib/mongodb";
+import { writeFile, mkdir, unlink } from "fs/promises";
+import path from "path";
 
-// GET handler for a single product
+// --- GET and DELETE handlers remain the same, only PUT is changed ---
+
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
@@ -16,7 +24,14 @@ export async function GET(
         { status: 404 }
       );
     }
-    return NextResponse.json(product);
+    // Make sure the response is serializable
+    const serializableProduct = {
+      ...product,
+      _id: product._id?.toString(),
+      created_at: product.created_at.toISOString(),
+      updated_at: product.updated_at.toISOString(),
+    };
+    return NextResponse.json(serializableProduct);
   } catch (error) {
     console.error(`Failed to fetch product ${params.id}:`, error);
     return NextResponse.json(
@@ -26,21 +41,89 @@ export async function GET(
   }
 }
 
-// PUT handler for updating a product
 export async function PUT(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const updateData = await request.json();
+    const data = await request.formData();
+
+    // --- Data Validation ---
+    const name_en = data.get("name_en") as string;
+    const name_es = data.get("name_es") as string;
+    const priceStr = data.get("price") as string;
+    const category_en = data.get("category_en") as string;
+    const category_es = data.get("category_es") as string;
+
+    if (!name_en || !name_es || !priceStr || !category_en || !category_es) {
+      return NextResponse.json(
+        { message: "Campos requeridos (nombre, precio, categoría) faltan." },
+        { status: 400 }
+      );
+    }
+
+    const price = parseFloat(priceStr);
+    if (isNaN(price)) {
+      return NextResponse.json(
+        { message: "Precio inválido. El precio debe ser un número." },
+        { status: 400 }
+      );
+    }
+    // --- End Validation ---
+
+    const imageFile = data.get("image_file") as File | null;
+    let imageUrl = data.get("image_url") as string;
+
+    if (imageFile && imageFile.size > 0) {
+      const bytes = await imageFile.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      const uploadsDir = path.join(process.cwd(), "public/uploads");
+      await mkdir(uploadsDir, { recursive: true });
+      const filename = `${Date.now()}-${imageFile.name.replace(/\s+/g, "_")}`;
+      const imagePath = path.join(uploadsDir, filename);
+      await writeFile(imagePath, buffer);
+      imageUrl = `/uploads/${filename}`;
+
+      const oldImageUrl = data.get("image_url") as string;
+      if (oldImageUrl && oldImageUrl.startsWith("/uploads/")) {
+        try {
+          await unlink(path.join(process.cwd(), "public", oldImageUrl));
+        } catch (e) {
+          console.error("Failed to delete old image:", e);
+        }
+      }
+    }
+
+    const updateData: Partial<Product> = {
+      name_en: name_en,
+      name_es: name_es,
+      description_en: data.get("description_en") as string,
+      description_es: data.get("description_es") as string,
+      price: price, // Use the validated, parsed number
+      category_en: category_en,
+      category_es: category_es,
+      is_featured: (data.get("is_featured") as string) === "true",
+      image_url: imageUrl,
+    };
+
     const updatedProduct = await updateProduct(params.id, updateData);
+
     if (!updatedProduct) {
       return NextResponse.json(
-        { message: "Product not found" },
+        { message: "Producto no encontrado o fallo al actualizar" },
         { status: 404 }
       );
     }
-    return NextResponse.json(updatedProduct);
+
+    // Sanitize the response to prevent serialization errors
+    const serializableProduct = {
+      ...updatedProduct,
+      _id: updatedProduct._id?.toString(),
+      created_at: updatedProduct.created_at.toISOString(),
+      updated_at: updatedProduct.updated_at.toISOString(),
+    };
+
+    return NextResponse.json(serializableProduct);
   } catch (error) {
     console.error(`Failed to update product ${params.id}:`, error);
     return NextResponse.json(
@@ -50,7 +133,6 @@ export async function PUT(
   }
 }
 
-// DELETE handler for deleting a product
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
@@ -63,7 +145,7 @@ export async function DELETE(
         { status: 404 }
       );
     }
-    return new NextResponse(null, { status: 204 }); // 204 No Content for successful deletion
+    return new NextResponse(null, { status: 204 });
   } catch (error) {
     console.error(`Failed to delete product ${params.id}:`, error);
     return NextResponse.json(

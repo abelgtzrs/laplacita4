@@ -1,358 +1,392 @@
-import { MongoClient, type Db, ObjectId } from "mongodb"
+import { MongoClient, type Db, ObjectId } from "mongodb";
 
 if (!process.env.MONGODB_URI) {
-  throw new Error("Please add your MongoDB URI to .env.local")
+  throw new Error("Please add your MongoDB URI to .env.local");
 }
 
-const uri = process.env.MONGODB_URI
-const options = {}
+const uri = process.env.MONGODB_URI;
+const options = {};
 
-let client: MongoClient
-let clientPromise: Promise<MongoClient>
+let client: MongoClient;
+let clientPromise: Promise<MongoClient>;
 
 if (process.env.NODE_ENV === "development") {
   // In development mode, use a global variable so that the value
   // is preserved across module reloads caused by HMR (Hot Module Replacement).
   const globalWithMongo = global as typeof globalThis & {
-    _mongoClientPromise?: Promise<MongoClient>
-  }
+    _mongoClientPromise?: Promise<MongoClient>;
+  };
 
   if (!globalWithMongo._mongoClientPromise) {
-    client = new MongoClient(uri, options)
-    globalWithMongo._mongoClientPromise = client.connect()
+    client = new MongoClient(uri, options);
+    globalWithMongo._mongoClientPromise = client.connect();
   }
-  clientPromise = globalWithMongo._mongoClientPromise
+  clientPromise = globalWithMongo._mongoClientPromise;
 } else {
   // In production mode, it's best to not use a global variable.
-  client = new MongoClient(uri, options)
-  clientPromise = client.connect()
+  client = new MongoClient(uri, options);
+  clientPromise = client.connect();
 }
 
-export default clientPromise
+export default clientPromise;
 
 export async function getDatabase(): Promise<Db> {
-  const client = await clientPromise
-  return client.db("laplacita_ftp")
+  const client = await clientPromise;
+  return client.db("laplacita_ftp");
 }
 
 // Product interface
 export interface Product {
-  _id?: ObjectId
-  name_en: string
-  name_es: string
-  description_en: string
-  description_es: string
-  price: number
-  category_en: string
-  category_es: string
-  image_url?: string
-  is_featured: boolean
-  created_at: Date
-  updated_at: Date
+  _id?: ObjectId;
+  name_en: string;
+  name_es: string;
+  description_en: string;
+  description_es: string;
+  price: number;
+  category_en: string;
+  category_es: string;
+  image_url?: string;
+  is_featured: boolean;
+  created_at: Date;
+  updated_at: Date;
 }
 
 // Promotion interface
 export interface Promotion {
-  _id?: ObjectId
-  title_en: string
-  title_es: string
-  description_en: string
-  description_es: string
-  image_url?: string
-  active_from: Date
-  active_to: Date
-  created_at: Date
-  updated_at: Date
+  _id?: ObjectId;
+  title_en: string;
+  title_es: string;
+  description_en: string;
+  description_es: string;
+  image_url?: string;
+  active_from: Date;
+  active_to: Date;
+  created_at: Date;
+  updated_at: Date;
 }
 
 // Communication interface
 export interface Communication {
-  _id?: ObjectId
-  title_en: string
-  title_es: string
-  message_en: string
-  message_es: string
-  type: "announcement" | "alert" | "promotion" | "news"
-  is_active: boolean
-  priority: "low" | "medium" | "high"
-  created_at: Date
-  updated_at: Date
+  _id?: ObjectId;
+  title_en: string;
+  title_es: string;
+  message_en: string;
+  message_es: string;
+  type: "announcement" | "alert" | "promotion" | "news";
+  is_active: boolean;
+  priority: "low" | "medium" | "high";
+  created_at: Date;
+  updated_at: Date;
 }
 
 // Product operations
-export async function getProducts(category?: string, search?: string, featured?: boolean): Promise<Product[]> {
+export async function getProducts(
+  category?: string,
+  search?: string,
+  featured?: boolean
+): Promise<Product[]> {
   try {
-    const db = await getDatabase()
-    const collection = db.collection<Product>("products")
+    const db = await getDatabase();
+    const collection = db.collection<Product>("products");
 
-    const filter: any = {}
+    const filter: any = {};
 
     if (category && category !== "all") {
       filter.$or = [
         { category_en: { $regex: category, $options: "i" } },
         { category_es: { $regex: category, $options: "i" } },
-      ]
+      ];
     }
 
     if (search) {
-      filter.$or = [{ name_en: { $regex: search, $options: "i" } }, { name_es: { $regex: search, $options: "i" } }]
+      filter.$or = [
+        { name_en: { $regex: search, $options: "i" } },
+        { name_es: { $regex: search, $options: "i" } },
+      ];
     }
 
     if (featured !== undefined) {
-      filter.is_featured = featured
+      filter.is_featured = featured;
     }
 
-    const products = await collection.find(filter).sort({ created_at: -1 }).toArray()
-    return products
+    const products = await collection
+      .find(filter)
+      .sort({ created_at: -1 })
+      .toArray();
+    return products;
   } catch (error) {
-    console.error("Error fetching products:", error)
-    return []
+    console.error("Error fetching products:", error);
+    return [];
   }
 }
 
 export async function getProductById(id: string): Promise<Product | null> {
   try {
-    const db = await getDatabase()
-    const collection = db.collection<Product>("products")
-    const product = await collection.findOne({ _id: new ObjectId(id) })
-    return product
+    const db = await getDatabase();
+    const collection = db.collection<Product>("products");
+    const product = await collection.findOne({ _id: new ObjectId(id) });
+    return product;
   } catch (error) {
-    console.error("Error fetching product:", error)
-    return null
+    console.error("Error fetching product:", error);
+    return null;
   }
 }
 
-export async function createProduct(product: Omit<Product, "_id" | "created_at" | "updated_at">): Promise<Product> {
+export async function createProduct(
+  product: Omit<Product, "_id" | "created_at" | "updated_at">
+): Promise<Product> {
   try {
-    const db = await getDatabase()
-    const collection = db.collection<Product>("products")
+    const db = await getDatabase();
+    const collection = db.collection<Product>("products");
 
     const newProduct: Product = {
       ...product,
       created_at: new Date(),
       updated_at: new Date(),
-    }
+    };
 
-    const result = await collection.insertOne(newProduct)
-    return { ...newProduct, _id: result.insertedId }
+    const result = await collection.insertOne(newProduct as any);
+    return { ...newProduct, _id: result.insertedId };
   } catch (error) {
-    console.error("Error creating product:", error)
-    throw error
+    console.error("Error creating product:", error);
+    throw error;
   }
 }
 
-export async function updateProduct(id: string, product: Partial<Product>): Promise<Product | null> {
+export async function updateProduct(
+  id: string,
+  product: Partial<Product>
+): Promise<Product | null> {
   try {
-    const db = await getDatabase()
-    const collection = db.collection<Product>("products")
+    const db = await getDatabase();
+    const collection = db.collection<Product>("products");
 
+    const { _id, ...updateFields } = product;
     const updateData = {
-      ...product,
+      ...updateFields,
       updated_at: new Date(),
-    }
+    };
 
     const result = await collection.findOneAndUpdate(
       { _id: new ObjectId(id) },
       { $set: updateData },
-      { returnDocument: "after" },
-    )
+      { returnDocument: "after" }
+    );
 
-    return result.value
+    // FIX: Directly return the result, which is the updated document or null.
+    return result;
   } catch (error) {
-    console.error("Error updating product:", error)
-    throw error
+    console.error("Error updating product:", error);
+    throw error;
   }
 }
 
 export async function deleteProduct(id: string): Promise<boolean> {
   try {
-    const db = await getDatabase()
-    const collection = db.collection<Product>("products")
-    const result = await collection.deleteOne({ _id: new ObjectId(id) })
-    return result.deletedCount > 0
+    const db = await getDatabase();
+    const collection = db.collection<Product>("products");
+    const result = await collection.deleteOne({ _id: new ObjectId(id) });
+    return result.deletedCount > 0;
   } catch (error) {
-    console.error("Error deleting product:", error)
-    return false
+    console.error("Error deleting product:", error);
+    return false;
   }
 }
 
 // Promotion operations
 export async function getPromotions(activeOnly = false): Promise<Promotion[]> {
   try {
-    const db = await getDatabase()
-    const collection = db.collection<Promotion>("promotions")
+    const db = await getDatabase();
+    const collection = db.collection<Promotion>("promotions");
 
-    let filter: any = {}
+    let filter: any = {};
     if (activeOnly) {
-      const now = new Date()
+      const now = new Date();
       filter = {
         active_from: { $lte: now },
         active_to: { $gte: now },
-      }
+      };
     }
 
-    const promotions = await collection.find(filter).sort({ created_at: -1 }).toArray()
-    return promotions
+    const promotions = await collection
+      .find(filter)
+      .sort({ created_at: -1 })
+      .toArray();
+    return promotions;
   } catch (error) {
-    console.error("Error fetching promotions:", error)
-    return []
+    console.error("Error fetching promotions:", error);
+    return [];
   }
 }
 
 export async function getPromotionById(id: string): Promise<Promotion | null> {
   try {
-    const db = await getDatabase()
-    const collection = db.collection<Promotion>("promotions")
-    const promotion = await collection.findOne({ _id: new ObjectId(id) })
-    return promotion
+    const db = await getDatabase();
+    const collection = db.collection<Promotion>("promotions");
+    const promotion = await collection.findOne({ _id: new ObjectId(id) });
+    return promotion;
   } catch (error) {
-    console.error("Error fetching promotion:", error)
-    return null
+    console.error("Error fetching promotion:", error);
+    return null;
   }
 }
 
 export async function createPromotion(
-  promotion: Omit<Promotion, "_id" | "created_at" | "updated_at">,
+  promotion: Omit<Promotion, "_id" | "created_at" | "updated_at">
 ): Promise<Promotion> {
   try {
-    const db = await getDatabase()
-    const collection = db.collection<Promotion>("promotions")
+    const db = await getDatabase();
+    const collection = db.collection<Promotion>("promotions");
 
     const newPromotion: Promotion = {
       ...promotion,
       created_at: new Date(),
       updated_at: new Date(),
-    }
+    };
 
-    const result = await collection.insertOne(newPromotion)
-    return { ...newPromotion, _id: result.insertedId }
+    const result = await collection.insertOne(newPromotion as any);
+    return { ...newPromotion, _id: result.insertedId };
   } catch (error) {
-    console.error("Error creating promotion:", error)
-    throw error
+    console.error("Error creating promotion:", error);
+    throw error;
   }
 }
 
-export async function updatePromotion(id: string, promotion: Partial<Promotion>): Promise<Promotion | null> {
+export async function updatePromotion(
+  id: string,
+  promotion: Partial<Promotion>
+): Promise<Promotion | null> {
   try {
-    const db = await getDatabase()
-    const collection = db.collection<Promotion>("promotions")
+    const db = await getDatabase();
+    const collection = db.collection<Promotion>("promotions");
 
+    const { _id, ...updateFields } = promotion;
     const updateData = {
-      ...promotion,
+      ...updateFields,
       updated_at: new Date(),
-    }
+    };
 
     const result = await collection.findOneAndUpdate(
       { _id: new ObjectId(id) },
       { $set: updateData },
-      { returnDocument: "after" },
-    )
+      { returnDocument: "after" }
+    );
 
-    return result.value
+    // FIX: Directly return the result, which is the updated document or null.
+    return result;
   } catch (error) {
-    console.error("Error updating promotion:", error)
-    throw error
+    console.error("Error updating promotion:", error);
+    throw error;
   }
 }
 
 export async function deletePromotion(id: string): Promise<boolean> {
   try {
-    const db = await getDatabase()
-    const collection = db.collection<Promotion>("promotions")
-    const result = await collection.deleteOne({ _id: new ObjectId(id) })
-    return result.deletedCount > 0
+    const db = await getDatabase();
+    const collection = db.collection<Promotion>("promotions");
+    const result = await collection.deleteOne({ _id: new ObjectId(id) });
+    return result.deletedCount > 0;
   } catch (error) {
-    console.error("Error deleting promotion:", error)
-    return false
+    console.error("Error deleting promotion:", error);
+    return false;
   }
 }
 
 // Communication operations
-export async function getCommunications(activeOnly = false): Promise<Communication[]> {
+export async function getCommunications(
+  activeOnly = false
+): Promise<Communication[]> {
   try {
-    const db = await getDatabase()
-    const collection = db.collection<Communication>("communications")
+    const db = await getDatabase();
+    const collection = db.collection<Communication>("communications");
 
-    const filter: any = {}
+    const filter: any = {};
     if (activeOnly) {
-      filter.is_active = true
+      filter.is_active = true;
     }
 
-    const communications = await collection.find(filter).sort({ priority: -1, created_at: -1 }).toArray()
-    return communications
+    const communications = await collection
+      .find(filter)
+      .sort({ priority: -1, created_at: -1 })
+      .toArray();
+    return communications;
   } catch (error) {
-    console.error("Error fetching communications:", error)
-    return []
+    console.error("Error fetching communications:", error);
+    return [];
   }
 }
 
-export async function getCommunicationById(id: string): Promise<Communication | null> {
+export async function getCommunicationById(
+  id: string
+): Promise<Communication | null> {
   try {
-    const db = await getDatabase()
-    const collection = db.collection<Communication>("communications")
-    const communication = await collection.findOne({ _id: new ObjectId(id) })
-    return communication
+    const db = await getDatabase();
+    const collection = db.collection<Communication>("communications");
+    const communication = await collection.findOne({ _id: new ObjectId(id) });
+    return communication;
   } catch (error) {
-    console.error("Error fetching communication:", error)
-    return null
+    console.error("Error fetching communication:", error);
+    return null;
   }
 }
 
 export async function createCommunication(
-  communication: Omit<Communication, "_id" | "created_at" | "updated_at">,
+  communication: Omit<Communication, "_id" | "created_at" | "updated_at">
 ): Promise<Communication> {
   try {
-    const db = await getDatabase()
-    const collection = db.collection<Communication>("communications")
+    const db = await getDatabase();
+    const collection = db.collection<Communication>("communications");
 
     const newCommunication: Communication = {
       ...communication,
       created_at: new Date(),
       updated_at: new Date(),
-    }
+    };
 
-    const result = await collection.insertOne(newCommunication)
-    return { ...newCommunication, _id: result.insertedId }
+    const result = await collection.insertOne(newCommunication as any);
+    return { ...newCommunication, _id: result.insertedId };
   } catch (error) {
-    console.error("Error creating communication:", error)
-    throw error
+    console.error("Error creating communication:", error);
+    throw error;
   }
 }
 
 export async function updateCommunication(
   id: string,
-  communication: Partial<Communication>,
+  communication: Partial<Communication>
 ): Promise<Communication | null> {
   try {
-    const db = await getDatabase()
-    const collection = db.collection<Communication>("communications")
+    const db = await getDatabase();
+    const collection = db.collection<Communication>("communications");
 
+    const { _id, ...updateFields } = communication;
     const updateData = {
-      ...communication,
+      ...updateFields,
       updated_at: new Date(),
-    }
+    };
 
     const result = await collection.findOneAndUpdate(
       { _id: new ObjectId(id) },
       { $set: updateData },
-      { returnDocument: "after" },
-    )
+      { returnDocument: "after" }
+    );
 
-    return result.value
+    // FIX: Directly return the result, which is the updated document or null.
+    return result;
   } catch (error) {
-    console.error("Error updating communication:", error)
-    throw error
+    console.error("Error updating communication:", error);
+    throw error;
   }
 }
 
 export async function deleteCommunication(id: string): Promise<boolean> {
   try {
-    const db = await getDatabase()
-    const collection = db.collection<Communication>("communications")
-    const result = await collection.deleteOne({ _id: new ObjectId(id) })
-    return result.deletedCount > 0
+    const db = await getDatabase();
+    const collection = db.collection<Communication>("communications");
+    const result = await collection.deleteOne({ _id: new ObjectId(id) });
+    return result.deletedCount > 0;
   } catch (error) {
-    console.error("Error deleting communication:", error)
-    return false
+    console.error("Error deleting communication:", error);
+    return false;
   }
 }

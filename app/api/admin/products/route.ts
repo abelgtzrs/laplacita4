@@ -1,9 +1,12 @@
 // app/api/admin/products/route.ts
-import { NextResponse } from "next/server";
-import { getProducts, createProduct } from "@/lib/mongodb"; // Assuming your lib/mongodb.ts is in the root lib folder
+import { NextResponse, type NextRequest } from "next/server";
+import { getProducts, createProduct, type Product } from "@/lib/mongodb"; // Assuming Product interface is exported
+import { writeFile, mkdir } from "fs/promises"; // For saving the file
+import path from "path";
+import { ObjectId } from "mongodb"; // For the Product interface reference
 
-// GET handler for fetching products
-export async function GET(request: Request) {
+// GET handler remains the same
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category") || undefined;
@@ -13,11 +16,6 @@ export async function GET(request: Request) {
       : undefined;
 
     const products = await getProducts(category, search, featured);
-    // In the previous example, products were returned directly.
-    // Your frontend expects the raw array, which is fine.
-    // If you wanted to stick to a { success: true, data: products } structure,
-    // you would need to adjust your frontend to access `data.data`.
-    // For now, returning the array directly matches your frontend's expectation.
     return NextResponse.json(products);
   } catch (error) {
     console.error("Failed to fetch products:", error);
@@ -28,25 +26,76 @@ export async function GET(request: Request) {
   }
 }
 
-// POST handler for creating a new product
-export async function POST(request: Request) {
+// POST handler for creating a new product with image upload
+export async function POST(request: NextRequest) {
   try {
-    const productData = await request.json();
+    const data = await request.formData();
+    const imageFile = data.get("image_file") as File | null;
+    let imageUrl: string | undefined = undefined; // Initialize imageUrl as undefined
 
-    if (
-      !productData.name_en ||
-      !productData.name_es ||
-      !productData.price ||
-      !productData.category_en ||
-      !productData.category_es
-    ) {
+    const uploadsDir = path.join(process.cwd(), "public/uploads");
+    try {
+      await mkdir(uploadsDir, { recursive: true }); // Ensure directory exists
+    } catch (dirError) {
+      console.error("Error creating uploads directory:", dirError);
+      // Decide if this should be a fatal error or if you proceed without image saving
+    }
+
+    if (imageFile) {
+      const bytes = await imageFile.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      // Sanitize filename and make it unique
+      const sanitizedName = imageFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const filename = `${Date.now()}-${sanitizedName}`;
+      const imagePath = path.join(uploadsDir, filename);
+
+      await writeFile(imagePath, buffer);
+      imageUrl = `/uploads/${filename}`; // URL path for the image, accessible from the public folder
+    }
+
+    // Extract other form data
+    const name_en = data.get("name_en") as string;
+    const name_es = data.get("name_es") as string;
+    const description_en = data.get("description_en") as string;
+    const description_es = data.get("description_es") as string;
+    const priceStr = data.get("price") as string;
+    const category_en = data.get("category_en") as string;
+    const category_es = data.get("category_es") as string;
+    const is_featured_str = data.get("is_featured") as string;
+
+    if (!name_en || !name_es || !priceStr || !category_en || !category_es) {
       return NextResponse.json(
         { message: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    const newProduct = await createProduct(productData);
+    const price = parseFloat(priceStr);
+    if (isNaN(price)) {
+      return NextResponse.json(
+        { message: "Invalid price format" },
+        { status: 400 }
+      );
+    }
+    const is_featured = is_featured_str === "true";
+
+    const productToCreate: Omit<Product, "_id" | "created_at" | "updated_at"> =
+      {
+        name_en,
+        name_es,
+        description_en,
+        description_es,
+        price,
+        category_en,
+        category_es,
+        is_featured,
+      };
+
+    if (imageUrl) {
+      productToCreate.image_url = imageUrl;
+    }
+
+    const newProduct = await createProduct(productToCreate);
     return NextResponse.json(newProduct, { status: 201 });
   } catch (error) {
     console.error("Failed to create product:", error);
