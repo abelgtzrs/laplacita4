@@ -412,14 +412,11 @@ export default function HomePage() {
             {/* Left Column: Google Map */}
             <div className="aspect-w-16 aspect-h-9 bg-gray-200 rounded-lg overflow-hidden shadow-xl">
               <iframe
-                src="[https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3498.932289794952!2d-80.36497752470557!3d27.458992776786116!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x88de84e9a89a0f87%3A0x872c7c6b6b04c7a3!2s1102%20Bell%20Ave%2C%20Fort%20Pierce%2C%20FL%2034982!5e0!3m2!1sen!2sus!4v1708188432299!5m2!1sen!2sus](https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3498.932289794952!2d-80.36497752470557!3d27.458992776786116!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x88de84e9a89a0f87%3A0x872c7c6b6b04c7a3!2s1102%20Bell%20Ave%2C%20Fort%20Pierce%2C%20FL%2034982!5e0!3m2!1sen!2sus!4v1708188432299!5m2!1sen!2sus)"
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                allowFullScreen={true}
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4439.850310143432!2d-80.3419013238318!3d27.4438694370617!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x88def1a13fbf8171%3A0xb04570d0f60af70!2s1508%20Delaware%20Ave%2C%20Fort%20Pierce%2C%20FL%2034950!5e1!3m2!1sen!2sus!4v1749179021559!5m2!1sen!2sus"
+                width="600"
+                height="576"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                title="Google Maps of La Placita Market"
               ></iframe>
             </div>
 
