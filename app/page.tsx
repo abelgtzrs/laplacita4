@@ -396,67 +396,51 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Facebook Feed & Google Maps */}
-      <section className="py-16 bg-gray-50">
+      {/* --- UPDATED: Location / Map & Facebook Feed Section --- */}
+      <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Encuéntranos y Síguenos
+            </h2>
+            <p className="text-lg text-gray-600">
+              1508 Delaware Ave, Fort Pierce, FL 34950
+            </p>
+            <div className="w-24 h-1 bg-gradient-to-r from-green-500 to-red-500 mx-auto mt-4"></div>
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Facebook Feed */}
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-                📘 Síguenos en Facebook
-              </h2>
-              <Card className="h-96">
-                <CardContent className="p-6 h-full flex flex-col items-center justify-center bg-blue-50">
-                  <Facebook className="h-16 w-16 text-blue-600 mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">La Placita FTP</h3>
-                  <p className="text-gray-600 text-center mb-4">
-                    Mantente al día con nuestras últimas ofertas, productos
-                    nuevos y eventos especiales.
-                  </p>
-                  <Button asChild className="bg-blue-600 hover:bg-blue-700">
-                    <a
-                      href="https://facebook.com/laplacitaftp"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Facebook className="mr-2 h-4 w-4" />
-                      Seguir en Facebook
-                    </a>
-                  </Button>
-                </CardContent>
-              </Card>
+            {/* Left Column: Google Map */}
+            <div className="aspect-w-16 aspect-h-9 bg-gray-200 rounded-lg overflow-hidden shadow-xl">
+              <iframe
+                src="[https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3498.932289794952!2d-80.36497752470557!3d27.458992776786116!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x88de84e9a89a0f87%3A0x872c7c6b6b04c7a3!2s1102%20Bell%20Ave%2C%20Fort%20Pierce%2C%20FL%2034982!5e0!3m2!1sen!2sus!4v1708188432299!5m2!1sen!2sus](https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3498.932289794952!2d-80.36497752470557!3d27.458992776786116!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x88de84e9a89a0f87%3A0x872c7c6b6b04c7a3!2s1102%20Bell%20Ave%2C%20Fort%20Pierce%2C%20FL%2034982!5e0!3m2!1sen!2sus!4v1708188432299!5m2!1sen!2sus)"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen={true}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Google Maps of La Placita Market"
+              ></iframe>
             </div>
 
-            {/* Google Maps */}
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-                📍 Encuéntranos
-              </h2>
-              <Card className="h-96">
-                <CardContent className="p-0 h-full">
-                  <div className="h-full bg-gray-200 rounded-lg flex flex-col items-center justify-center">
-                    <MapPin className="h-16 w-16 text-red-600 mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">
-                      La Placita FTP
-                    </h3>
-                    <p className="text-gray-600 text-center mb-4 px-4">
-                      1508 Delaware Ave
-                      <br />
-                      Fort Pierce, FL 34950
-                    </p>
-                    <Button asChild variant="outline">
-                      <a
-                        href="https://maps.google.com/?q=123+Main+Street,+Fort+Pierce,+FL+34950"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <MapPin className="mr-2 h-4 w-4" />
-                        Ver en Google Maps
-                      </a>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+            {/* Right Column: Facebook Feed */}
+            <div className="rounded-lg shadow-xl bg-white p-4">
+              <h3 className="text-xl font-semibold text-gray-800 mb-4">
+                Síguenos en Facebook
+              </h3>
+              <div className="aspect-w-16 aspect-h-9 md:aspect-h-16 overflow-hidden rounded-md">
+                <iframe
+                  src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D61576133441458&tabs=timeline&width=500&height=500&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true&appId"
+                  width="500"
+                  height="500"
+                  style={{ border: "none", overflow: "hidden" }}
+                  scrolling="no"
+                  frameBorder="0"
+                  allowFullScreen={true}
+                  allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                ></iframe>
+                {/* --- END OF FACEBOOK FEED EMBED CODE AREA --- */}
+              </div>
             </div>
           </div>
         </div>

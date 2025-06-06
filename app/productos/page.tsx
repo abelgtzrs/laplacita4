@@ -13,8 +13,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useLanguage } from "@/contexts/language-context";
-// We will no longer import directly from the database on the client-side
-// import { getProducts } from "@/lib/db"
 
 export default function ProductsPage() {
   const { t, language } = useLanguage();
@@ -42,16 +40,24 @@ export default function ProductsPage() {
     { value: "alphabetical", label: t("products.sort.alphabetical") },
   ];
 
-  // UPDATED: Fetch products from the API endpoint
+  // Fetch products and filter out food items
   useEffect(() => {
     async function loadProducts() {
       setLoading(true);
       try {
         const response = await fetch("/api/admin/products");
         if (response.ok) {
-          const data = await response.json();
-          setProducts(data);
-          setFilteredProducts(data);
+          const allProducts = await response.json();
+
+          // --- ADDED FILTER ---
+          // Filter out products with the category "Comida" or "Food"
+          const nonFoodProducts = allProducts.filter(
+            (product: any) =>
+              product.category_es !== "Comida" && product.category_en !== "Food"
+          );
+
+          setProducts(nonFoodProducts);
+          setFilteredProducts(nonFoodProducts);
         } else {
           console.error("Failed to fetch products from API");
         }
@@ -64,6 +70,7 @@ export default function ProductsPage() {
     loadProducts();
   }, []);
 
+  // The client-side filtering logic below remains the same
   useEffect(() => {
     let filtered = [...products];
 
@@ -120,6 +127,7 @@ export default function ProductsPage() {
     setFilteredProducts(filtered);
   }, [products, searchTerm, selectedCategory, sortBy, language]);
 
+  // The rest of the JSX remains the same
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -134,7 +142,6 @@ export default function ProductsPage() {
         {/* Filters and Search */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
               <Input
@@ -145,8 +152,6 @@ export default function ProductsPage() {
                 className="pl-10"
               />
             </div>
-
-            {/* Category Filter */}
             <Select
               value={selectedCategory}
               onValueChange={setSelectedCategory}
@@ -162,8 +167,6 @@ export default function ProductsPage() {
                 ))}
               </SelectContent>
             </Select>
-
-            {/* Sort */}
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger>
                 <SelectValue placeholder="Ordenar por..." />
@@ -176,8 +179,6 @@ export default function ProductsPage() {
                 ))}
               </SelectContent>
             </Select>
-
-            {/* Results count */}
             <div className="flex items-center text-gray-600">
               <Filter className="h-5 w-5 mr-2" />
               {filteredProducts.length} productos
