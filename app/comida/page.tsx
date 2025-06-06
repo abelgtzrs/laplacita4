@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Utensils, Clock, Star, Heart } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,68 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/language-context";
 
 export default function FoodPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const [foodItems, setFoodItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const foodItems = [
-    {
-      name: "Tamales Tradicionales",
-      description:
-        "Tamales hechos a mano con masa de maíz y rellenos auténticos",
-      price: "$2.50",
-      image: "/placeholder.svg?height=300&width=400",
-      category: "Tradicional",
-      available: "Sábados y Domingos",
-      popular: true,
-    },
-    {
-      name: "Carnitas Frescas",
-      description:
-        "Cerdo cocido lentamente con especias tradicionales mexicanas",
-      price: "$12.99/lb",
-      image: "/placeholder.svg?height=300&width=400",
-      category: "Carnes",
-      available: "Todos los días",
-      popular: true,
-    },
-    {
-      name: "Pollo Asado",
-      description: "Pollo entero marinado y asado con hierbas y especias",
-      price: "$8.99",
-      image: "/placeholder.svg?height=300&width=400",
-      category: "Carnes",
-      available: "Todos los días",
-      popular: false,
-    },
-    {
-      name: "Pozole Rojo",
-      description: "Sopa tradicional mexicana con maíz pozolero y chile rojo",
-      price: "$6.99",
-      image: "/placeholder.svg?height=300&width=400",
-      category: "Sopas",
-      available: "Fines de semana",
-      popular: true,
-    },
-    {
-      name: "Quesadillas Gigantes",
-      description: "Quesadillas grandes con queso Oaxaca y tu relleno favorito",
-      price: "$4.99",
-      image: "/placeholder.svg?height=300&width=400",
-      category: "Antojitos",
-      available: "Todos los días",
-      popular: false,
-    },
-    {
-      name: "Mole Poblano",
-      description:
-        "Pollo bañado en auténtico mole poblano con más de 20 ingredientes",
-      price: "$13.99",
-      image: "/placeholder.svg?height=300&width=400",
-      category: "Tradicional",
-      available: "Domingos",
-      popular: true,
-    },
-  ];
-
+  // Specialties can remain hardcoded or be fetched from another collection if needed
   const specialties = [
     {
       title: "Comida Casera Diaria",
@@ -79,7 +23,7 @@ export default function FoodPage() {
     {
       title: "Pedidos Especiales",
       description:
-        "Acepta pedidos especiales para eventos y celebraciones familiares.",
+        "Aceptamos pedidos especiales para eventos y celebraciones familiares.",
       icon: Star,
     },
     {
@@ -89,6 +33,28 @@ export default function FoodPage() {
       icon: Utensils,
     },
   ];
+
+  // Fetch food products from the API
+  useEffect(() => {
+    async function loadFoodProducts() {
+      setLoading(true);
+      try {
+        // Fetch products specifically from the 'Comida' category
+        const response = await fetch("/api/admin/products?category=Comida");
+        if (response.ok) {
+          const data = await response.json();
+          setFoodItems(data);
+        } else {
+          console.error("Failed to fetch food products");
+        }
+      } catch (error) {
+        console.error("Error fetching food products:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadFoodProducts();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -107,45 +73,71 @@ export default function FoodPage() {
           </p>
         </div>
 
-        {/* Food Items Grid */}
+        {/* Food Items Grid - Now dynamically rendered */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {foodItems.map((item, index) => (
-            <Card
-              key={index}
-              className="overflow-hidden hover:shadow-lg transition-shadow"
-            >
-              <div className="aspect-video relative">
-                <Image
-                  src={item.image || "/placeholder.svg"}
-                  alt={item.name}
-                  fill
-                  className="object-cover"
-                />
-                {item.popular && (
-                  <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center">
-                    <Star className="h-3 w-3 mr-1" />
-                    Popular
+          {loading ? (
+            Array.from({ length: 6 }).map((_, i) => (
+              <Card key={i} className="overflow-hidden animate-pulse">
+                <div className="aspect-video bg-gray-200"></div>
+                <CardContent className="p-4 space-y-2">
+                  <div className="h-5 bg-gray-200 rounded"></div>
+                  <div className="h-4 w-2/3 bg-gray-200 rounded"></div>
+                  <div className="h-6 w-1/3 bg-gray-200 rounded"></div>
+                </CardContent>
+              </Card>
+            ))
+          ) : foodItems.length > 0 ? (
+            foodItems.map((item: any) => (
+              <Card
+                key={item._id}
+                className="overflow-hidden hover:shadow-lg transition-shadow"
+              >
+                <div className="aspect-video relative bg-gray-200">
+                  <Image
+                    src={item.image_url || "/placeholder.svg"}
+                    alt={language === "es" ? item.name_es : item.name_en}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+                  {item.is_featured && (
+                    <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center">
+                      <Star className="h-3 w-3 mr-1" />
+                      Popular
+                    </div>
+                  )}
+                </div>
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-bold text-lg">
+                      {language === "es" ? item.name_es : item.name_en}
+                    </h3>
+                    <Badge variant="secondary">
+                      {language === "es" ? item.category_es : item.category_en}
+                    </Badge>
                   </div>
-                )}
-              </div>
-              <CardContent className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-bold text-lg">{item.name}</h3>
-                  <Badge variant="secondary">{item.category}</Badge>
-                </div>
-                <p className="text-gray-600 text-sm mb-3">{item.description}</p>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-2xl font-bold text-green-600">
-                    {item.price}
-                  </span>
-                </div>
-                <div className="flex items-center text-sm text-gray-500">
-                  <Clock className="h-4 w-4 mr-1" />
-                  <span>Disponible: {item.available}</span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  <p className="text-gray-600 text-sm mb-3">
+                    {language === "es"
+                      ? item.description_es
+                      : item.description_en}
+                  </p>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-2xl font-bold text-green-600">
+                      ${Number.parseFloat(item.price).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-500">
+                    <Clock className="h-4 w-4 mr-1" />
+                    <span>Disponible: Todos los días</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <p className="col-span-full text-center text-gray-500">
+              No hay platillos de comida disponibles en este momento.
+            </p>
+          )}
         </div>
         {/* Specialties */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
@@ -166,48 +158,59 @@ export default function FoodPage() {
             </Card>
           ))}
         </div>
-        {/* Daily Specials */}
         <Card className="bg-gradient-to-r from-red-600 to-green-600 text-white mb-12">
           <CardContent className="p-8 text-center">
-            <Utensils className="h-16 w-16 mx-auto mb-6 text-yellow-300" />
+            <Utensils className="h-16 w-16 mx-auto mb-6 text-white" />
+
             <h2 className="text-3xl font-bold mb-4">Especiales de la Semana</h2>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
               <div className="text-center">
                 <div className="font-bold text-lg">Lunes - Miércoles</div>
-                <div className="text-sm opacity-90">Pozole y Menudo</div>
+
+                <div className="text-sm opacity-90">Caldo de Res</div>
               </div>
+
               <div className="text-center">
                 <div className="font-bold text-lg">Jueves</div>
+
                 <div className="text-sm opacity-90">Birria de Res</div>
               </div>
+
               <div className="text-center">
                 <div className="font-bold text-lg">Viernes</div>
-                <div className="text-sm opacity-90">Pescado Frito</div>
+
+                <div className="text-sm opacity-90">Mojarra Frita</div>
               </div>
+
               <div className="text-center">
                 <div className="font-bold text-lg">Sábado - Domingo</div>
-                <div className="text-sm opacity-90">Tamales y Barbacoa</div>
+
+                <div className="text-sm opacity-90">Menudo</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Catering Info */}
+
         <Card className="border-2 border-yellow-400">
           <CardContent className="p-8 text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
               Servicios de Catering
             </h2>
+
             <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
               ¿Planeas una fiesta o evento especial? Ofrecemos servicios de
               catering para bodas, quinceañeras, cumpleaños y eventos
               corporativos. Comida auténtica que hará de tu evento algo
               memorable.
             </p>
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <div className="flex items-center justify-center space-x-2 text-green-600">
                 <span className="font-semibold">
-                  📞 Llama para cotizar: (772) 123-4567
+                  📞 Llama para cotizar: (772) 242-1416
                 </span>
               </div>
             </div>

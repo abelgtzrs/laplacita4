@@ -12,44 +12,94 @@ import {
   MessageCircle,
   Facebook,
   MapPin,
+  FileText,
+  Smartphone,
+  Bus,
+  CircleDollarSign,
+  Landmark,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/language-context";
 import ImageSlideshow from "@/components/ImageSlideshow";
 
-// ... inside your page component, define the list of your images
 const storeImages = [
   "/store/galletas.png",
   "/store/chips.png",
   "/store/carnes.png",
   "/store/verdura.jpg",
 ];
+
 export default function HomePage() {
   const { t, language } = useLanguage();
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [currentPromotions, setCurrentPromotions] = useState([]);
 
+  // UPDATED: Service data now includes partners and logos
+  const services = [
+    {
+      icon: Landmark,
+      titleKey: "services.money_transfers",
+      descriptionKey: "services.money_transfers_desc",
+      partners: [
+        { name: "Intermex", logoUrl: "/logos/intermex_logo.png" },
+        { name: "MoneyGram", logoUrl: "/logos/moneygram_logo.png" },
+        { name: "Ria", logoUrl: "/logos/ria_logo.png" },
+      ],
+    },
+    {
+      icon: FileText,
+      titleKey: "services.bill_payments",
+      descriptionKey: "services.bill_payments_desc",
+      partners: [
+        { name: "FPUA", logoUrl: "/logos/fpua_logo.png" },
+        { name: "FPL", logoUrl: "/logos/fpl_logo.png" },
+        { name: "Comcast", logoUrl: "/logos/comcast_logo.png" },
+        { name: "Dish Network", logoUrl: "/logos/dish_logo.png" },
+      ],
+    },
+    {
+      icon: Smartphone,
+      titleKey: "services.mobile_topups",
+      descriptionKey: "services.mobile_topups_desc",
+      partners: [
+        { name: "Boss Revolution", logoUrl: "/logos/br_logo.svg" },
+        { name: "Telcel", logoUrl: "/logos/telcel_logo.png" },
+        { name: "Tigo", logoUrl: "/logos/tigo_logo.png" },
+      ],
+    },
+    {
+      icon: Bus,
+      titleKey: "services.bus_tickets",
+      descriptionKey: "services.bus_tickets_desc",
+      partners: [
+        { name: "Sultana", logoUrl: "/logos/sultana_logo.webp" },
+        { name: "Tornado", logoUrl: "/logos/tornado_logo.png" },
+      ],
+    },
+    {
+      icon: CircleDollarSign,
+      titleKey: "services.check_cashing",
+      descriptionKey: "services.check_cashing_desc",
+      partners: [], // No logos for check cashing as per services page
+    },
+  ];
+
   useEffect(() => {
     async function loadData() {
+      // Data fetching logic remains the same
       try {
-        // Load featured products
         const productsResponse = await fetch(
           "/api/admin/products?featured=true"
         );
-        if (productsResponse.ok) {
-          const products = await productsResponse.json();
-          setFeaturedProducts(products.slice(0, 12));
-        }
+        if (productsResponse.ok)
+          setFeaturedProducts((await productsResponse.json()).slice(0, 12));
 
-        // Load active promotions
         const promotionsResponse = await fetch(
           "/api/admin/promotions?activeOnly=true"
         );
-        if (promotionsResponse.ok) {
-          const promotions = await promotionsResponse.json();
-          setCurrentPromotions(promotions.slice(0, 2));
-        }
+        if (promotionsResponse.ok)
+          setCurrentPromotions((await promotionsResponse.json()).slice(0, 2));
       } catch (error) {
         console.error("Error loading data:", error);
       }
@@ -59,25 +109,21 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section with Slideshow */}
+      {/* Hero and Featured Products sections remain the same */}
+      {/* ... */}
       <section className="relative h-[500px] md:h-[600px] overflow-hidden">
         <div className="absolute inset-0">
-          {/* Slideshow container */}
           <div className="relative h-full bg-gradient-to-r from-green-600 via-yellow-500 to-red-600">
-            {/* The Slideshow Component in the background */}
             <ImageSlideshow slides={storeImages} />
-
-            {/* Your centered text overlay, which now sits on top */}
             <div className="h-full flex items-center justify-center"></div>
           </div>
         </div>
-
         <div className="relative z-20 h-full flex items-center">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 text-shadow-lg bg-color-red-600">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 text-shadow-lg bg-color-red-600">
               {t("home.welcome")}
             </h1>
-            <p className="text-xl md:text-4xl mb-8 max-w-3xl mx-auto">
+            <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
               {t("home.subtitle")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -95,7 +141,7 @@ export default function HomePage() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="border-white text-green-600 hover:bg-white hover:text-green-600"
+                className="border-white text-white hover:bg-white hover:text-green-600"
               >
                 <Link href="/servicios">
                   <CreditCard className="mr-2 h-5 w-5" />
@@ -107,7 +153,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Products */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
@@ -116,7 +161,6 @@ export default function HomePage() {
             </h2>
             <div className="w-24 h-1 bg-gradient-to-r from-green-500 to-red-500 mx-auto"></div>
           </div>
-
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-8">
             {featuredProducts.length > 0
               ? featuredProducts.map((product: any) => (
@@ -157,8 +201,7 @@ export default function HomePage() {
                     </CardContent>
                   </Card>
                 ))
-              : // Placeholder products
-                Array.from({ length: 12 }).map((_, i) => (
+              : Array.from({ length: 12 }).map((_, i) => (
                   <Card key={i} className="overflow-hidden">
                     <div className="aspect-square bg-gray-200 flex items-center justify-center">
                       <ShoppingCart className="h-8 w-8 text-gray-400" />
@@ -171,7 +214,6 @@ export default function HomePage() {
                   </Card>
                 ))}
           </div>
-
           <div className="text-center">
             <Button asChild variant="outline" size="lg">
               <Link href="/productos">
@@ -183,54 +225,67 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Services Highlights */}
+      {/* --- UPDATED: Interactive Services Section --- */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              {t("home.services_highlights")}
+              {t("home.our_services")}
             </h2>
             <div className="w-24 h-1 bg-gradient-to-r from-green-500 to-red-500 mx-auto"></div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CreditCard className="h-8 w-8 text-green-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">
-                {t("services.money_transfers")}
-              </h3>
-              <p className="text-gray-600">
-                {t("services.money_transfers_desc")}
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="bg-yellow-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Utensils className="h-8 w-8 text-yellow-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">{t("food.title")}</h3>
-              <p className="text-gray-600">
-                Comida fresca preparada diariamente
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Star className="h-8 w-8 text-red-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">
-                {t("services.bill_payments")}
-              </h3>
-              <p className="text-gray-600">
-                {t("services.bill_payments_desc")}
-              </p>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+            {services.map((service, index) => {
+              const ServiceIcon = service.icon;
+              return (
+                <div
+                  key={index}
+                  className="group relative rounded-lg border-2 border-gray-100 p-6 text-center transition-all duration-300 hover:border-green-500 hover:shadow-xl"
+                >
+                  <div className="flex flex-col items-center">
+                    <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110">
+                      <ServiceIcon className="h-8 w-8 text-green-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      {t(service.titleKey)}
+                    </h3>
+                  </div>
+                  {/* Expanding section */}
+                  <div className="pt-4 max-h-0 overflow-hidden transition-all duration-500 ease-in-out group-hover:max-h-96">
+                    <p className="text-gray-600 text-sm mb-4">
+                      {t(service.descriptionKey)}
+                    </p>
+                    {service.partners.length > 0 && (
+                      <div className="border-t border-gray-200 pt-4">
+                        <h4 className="text-xs font-bold text-gray-500 uppercase mb-3">
+                          Nuestros Socios
+                        </h4>
+                        <div className="flex flex-wrap gap-4 items-center justify-center">
+                          {service.partners.map((partner) => (
+                            <div
+                              key={partner.name}
+                              className="relative h-8 w-16"
+                            >
+                              <Image
+                                src={partner.logoUrl}
+                                alt={partner.name}
+                                fill
+                                className="object-contain"
+                                sizes="10vw"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
-
       {/* About Snippet */}
       <section className="py-16 bg-gradient-to-r from-green-50 to-red-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
