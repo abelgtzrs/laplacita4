@@ -5,15 +5,11 @@ import {
   deleteCommunication,
 } from "@/lib/mongodb";
 
-// The context object, including params, has a specific type.
-// We define it here for clarity.
-type RouteContext = {
-  params: {
-    id: string;
-  };
-};
-
-export async function GET(request: NextRequest, { params }: RouteContext) {
+// CORRECTED: The type for the 'params' object is now defined inline.
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const communication = await getCommunicationById(params.id);
     if (!communication) {
@@ -22,7 +18,6 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
         { status: 404 }
       );
     }
-    // It's good practice to make sure the response is serializable
     const serializableCommunication = {
       ...communication,
       _id: communication._id?.toString(),
@@ -37,7 +32,10 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
   }
 }
 
-export async function PUT(request: NextRequest, { params }: RouteContext) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const body = await request.json();
     const communication = await updateCommunication(params.id, body);
@@ -61,7 +59,10 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: RouteContext) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const success = await deleteCommunication(params.id);
     if (!success) {
