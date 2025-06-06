@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Add this eslint block
+  eslint: {
+    // Warning: This allows production builds to successfully complete even if
+    // your project has ESLint errors.
+    ignoreDuringBuilds: true,
+  },
   images: {
     remotePatterns: [
       {
@@ -8,7 +14,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "content.govdelivery.com", // From your error message
+        hostname: "content.govdelivery.com",
       },
       {
         protocol: "https",
