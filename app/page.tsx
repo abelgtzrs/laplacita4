@@ -33,9 +33,9 @@ const storeImages = [
 export default function HomePage() {
   const { t, language } = useLanguage();
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [popularFood, setPopularFood] = useState([]); // <-- New state for food items
   const [currentPromotions, setCurrentPromotions] = useState([]);
 
-  // UPDATED: Service data now includes partners and logos
   const services = [
     {
       icon: Landmark,
@@ -81,25 +81,36 @@ export default function HomePage() {
       icon: CircleDollarSign,
       titleKey: "services.check_cashing",
       descriptionKey: "services.check_cashing_desc",
-      partners: [], // No logos for check cashing as per services page
+      partners: [],
     },
   ];
 
   useEffect(() => {
     async function loadData() {
-      // Data fetching logic remains the same
       try {
-        const productsResponse = await fetch(
-          "/api/admin/products?featured=true"
-        );
-        if (productsResponse.ok)
-          setFeaturedProducts((await productsResponse.json()).slice(0, 12));
+        // Use Promise.all to fetch data concurrently
+        const [productsRes, promotionsRes, foodRes] = await Promise.all([
+          fetch("/api/admin/products?featured=true"),
+          fetch("/api/admin/promotions?activeOnly=true"),
+          fetch("/api/admin/products?category=Comida&featured=true"), // Fetch featured food
+        ]);
 
-        const promotionsResponse = await fetch(
-          "/api/admin/promotions?activeOnly=true"
-        );
-        if (promotionsResponse.ok)
-          setCurrentPromotions((await promotionsResponse.json()).slice(0, 2));
+        if (productsRes.ok) {
+          const allFeatured = await productsRes.json();
+          // Filter out food items from the general featured products list
+          setFeaturedProducts(
+            allFeatured
+              .filter(
+                (p: any) =>
+                  p.category_es !== "Comida" && p.category_en !== "Food"
+              )
+              .slice(0, 6)
+          );
+        }
+
+        if (foodRes.ok) setPopularFood((await foodRes.json()).slice(0, 6));
+        if (promotionsRes.ok)
+          setCurrentPromotions((await promotionsRes.json()).slice(0, 2));
       } catch (error) {
         console.error("Error loading data:", error);
       }
@@ -109,8 +120,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero and Featured Products sections remain the same */}
-      {/* ... */}
+      {/* Hero Section remains the same */}
       <section className="relative h-[500px] md:h-[600px] overflow-hidden">
         <div className="absolute inset-0">
           <div className="relative h-full bg-gradient-to-r from-green-600 via-yellow-500 to-red-600">
@@ -141,7 +151,7 @@ export default function HomePage() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="border-white text-white hover:bg-white hover:text-green-600"
+                className="border-white text-green-600 hover:bg-white hover:text-green-600"
               >
                 <Link href="/servicios">
                   <CreditCard className="mr-2 h-5 w-5" />
@@ -153,74 +163,127 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* --- UPDATED: Featured Products & Popular Food Section --- */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              {t("home.featured_products")}
-            </h2>
-            <div className="w-24 h-1 bg-gradient-to-r from-green-500 to-red-500 mx-auto"></div>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-8">
-            {featuredProducts.length > 0
-              ? featuredProducts.map((product: any) => (
-                  <Card
-                    key={product._id}
-                    className="overflow-hidden hover:shadow-lg transition-shadow"
-                  >
-                    <div className="aspect-square relative bg-gray-200">
-                      {product.image_url ? (
-                        <Image
-                          src={product.image_url || "/placeholder.svg"}
-                          alt={
-                            language === "es"
-                              ? product.name_es
-                              : product.name_en
-                          }
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center h-full">
-                          <ShoppingCart className="h-8 w-8 text-gray-400" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-16">
+            {/* Left Column: Featured Products */}
+            <div>
+              <div className="text-center lg:text-left mb-8">
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                  {t("home.featured_products")}
+                </h2>
+                <div className="w-24 h-1 bg-gradient-to-r from-green-500 to-red-500 mx-auto lg:mx-0"></div>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                {featuredProducts.length > 0
+                  ? featuredProducts.map((product: any) => (
+                      <Card
+                        key={product._id}
+                        className="overflow-hidden hover:shadow-lg transition-shadow"
+                      >
+                        <div className="aspect-square relative bg-gray-200">
+                          <Image
+                            src={product.image_url || "/placeholder.svg"}
+                            alt={
+                              language === "es"
+                                ? product.name_es
+                                : product.name_en
+                            }
+                            fill
+                            className="object-cover"
+                          />
                         </div>
-                      )}
-                    </div>
-                    <CardContent className="p-3">
-                      <h3 className="font-semibold text-sm mb-1 line-clamp-2">
-                        {language === "es" ? product.name_es : product.name_en}
-                      </h3>
-                      <p className="text-gray-600 text-xs mb-1">
-                        {language === "es"
-                          ? product.category_es
-                          : product.category_en}
-                      </p>
-                      <p className="text-lg font-bold text-green-600">
-                        ${product.price}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))
-              : Array.from({ length: 12 }).map((_, i) => (
-                  <Card key={i} className="overflow-hidden">
-                    <div className="aspect-square bg-gray-200 flex items-center justify-center">
-                      <ShoppingCart className="h-8 w-8 text-gray-400" />
-                    </div>
-                    <CardContent className="p-3">
-                      <h3 className="font-semibold text-sm mb-1">Producto</h3>
-                      <p className="text-gray-600 text-xs mb-1">Categoría</p>
-                      <p className="text-lg font-bold text-green-600">$0.00</p>
-                    </CardContent>
-                  </Card>
-                ))}
-          </div>
-          <div className="text-center">
-            <Button asChild variant="outline" size="lg">
-              <Link href="/productos">
-                Ver Todos los Productos
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
+                        <CardContent className="p-3">
+                          <h3 className="font-semibold text-sm mb-1 line-clamp-2">
+                            {language === "es"
+                              ? product.name_es
+                              : product.name_en}
+                          </h3>
+                          <p className="text-lg font-bold text-green-600">
+                            ${product.price}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ))
+                  : Array.from({ length: 6 }).map((_, i) => (
+                      <Card key={i} className="overflow-hidden animate-pulse">
+                        <div className="aspect-square bg-gray-200"></div>
+                        <CardContent className="p-3 space-y-2">
+                          <div className="h-4 bg-gray-200 rounded"></div>
+                          <div className="h-5 w-1/2 bg-gray-200 rounded"></div>
+                        </CardContent>
+                      </Card>
+                    ))}
+              </div>
+              <div className="text-center lg:text-left">
+                <Button asChild variant="outline" size="lg">
+                  <Link href="/productos">
+                    Ver Todos los Productos{" "}
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+
+            {/* Right Column: Popular Food */}
+            <div>
+              <div className="text-center lg:text-left mb-8">
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                  {t("food.title")} Popular
+                </h2>
+                <div className="w-24 h-1 bg-gradient-to-r from-yellow-500 to-orange-500 mx-auto lg:mx-0"></div>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                {popularFood.length > 0
+                  ? popularFood.map((product: any) => (
+                      <Card
+                        key={product._id}
+                        className="overflow-hidden hover:shadow-lg transition-shadow"
+                      >
+                        <div className="aspect-square relative bg-gray-200">
+                          <Image
+                            src={product.image_url || "/placeholder.svg"}
+                            alt={
+                              language === "es"
+                                ? product.name_es
+                                : product.name_en
+                            }
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <CardContent className="p-3">
+                          <h3 className="font-semibold text-sm mb-1 line-clamp-2">
+                            {language === "es"
+                              ? product.name_es
+                              : product.name_en}
+                          </h3>
+                          <p className="text-lg font-bold text-green-600">
+                            ${product.price}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ))
+                  : Array.from({ length: 6 }).map((_, i) => (
+                      <Card key={i} className="overflow-hidden animate-pulse">
+                        <div className="aspect-square bg-gray-200"></div>
+                        <CardContent className="p-3 space-y-2">
+                          <div className="h-4 bg-gray-200 rounded"></div>
+                          <div className="h-5 w-1/2 bg-gray-200 rounded"></div>
+                        </CardContent>
+                      </Card>
+                    ))}
+              </div>
+              <div className="text-center lg:text-left">
+                <Button asChild variant="outline" size="lg">
+                  <Link href="/comida">
+                    Ver Todo el Menú
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </section>

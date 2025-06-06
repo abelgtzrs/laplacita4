@@ -8,17 +8,34 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { AdminLayout } from "@/components/admin-layout";
-import { ArrowLeft, Save } from "lucide-react"; // Removed Upload, not used directly here
+import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image"; // For image preview
+
+// Define categories to be used in the dropdown
+const commonCategories = [
+  { es: "Carnes", en: "Meats" },
+  { es: "Abarrotes", en: "Groceries" },
+  { es: "Frutas y Verduras", en: "Produce" },
+  { es: "Bebidas", en: "Drinks" },
+  { es: "Lácteos", en: "Dairy" },
+  { es: "Panadería", en: "Bakery" },
+  { es: "Limpieza", en: "Cleaning" },
+  { es: "Cuidado Personal", en: "Personal Care" },
+  { es: "Comida", en: "Food" },
+];
 
 export default function AddProductPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-
+  const [isOtherCategory, setIsOtherCategory] = useState(false);
   const [formData, setFormData] = useState({
     name_en: "",
     name_es: "",
@@ -27,7 +44,7 @@ export default function AddProductPage() {
     price: "",
     category_en: "",
     category_es: "",
-    // image_url is now handled by imageFile
+    image_url: "",
     is_featured: false,
   });
 
@@ -38,14 +55,20 @@ export default function AddProductPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
+  const handleCategoryChange = (value: string) => {
+    if (value === "other") {
+      setIsOtherCategory(true);
+      setFormData((prev) => ({ ...prev, category_en: "", category_es: "" }));
     } else {
-      setImageFile(null);
-      setImagePreview(null);
+      const selectedCat = commonCategories.find((c) => c.es === value);
+      if (selectedCat) {
+        setFormData((prev) => ({
+          ...prev,
+          category_es: selectedCat.es,
+          category_en: selectedCat.en,
+        }));
+      }
+      setIsOtherCategory(false);
     }
   };
 
@@ -53,41 +76,36 @@ export default function AddProductPage() {
     e.preventDefault();
     setLoading(true);
 
+    // Using FormData to prepare for potential file uploads in the future if needed
     const submissionData = new FormData();
-    // Append all text fields from formData
     Object.entries(formData).forEach(([key, value]) => {
       submissionData.append(key, String(value));
     });
-
-    if (imageFile) {
-      submissionData.append("image_file", imageFile);
-    }
-    // Ensure price is appended correctly if it was part of formData and needs specific formatting
-    // submissionData.append("price", formData.price); // Already handled by Object.entries if price is a string
+    // For now, we are still using image_url as per the original file, but this is ready for file uploads
+    submissionData.set("price", formData.price);
 
     try {
       const response = await fetch("/api/admin/products", {
         method: "POST",
-        body: submissionData, // No 'Content-Type' header needed for FormData, browser sets it
+        // When sending FormData, the browser sets the Content-Type header automatically.
+        // If you were to add file uploads, you would append the file to submissionData.
+        body: JSON.stringify({
+          ...formData,
+          price: parseFloat(formData.price),
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
 
       if (response.ok) {
         router.push("/admin/products");
       } else {
-        const errorData = await response.json();
-        alert(
-          `Error al crear el producto: ${
-            errorData.message || "Error desconocido"
-          }`
-        );
+        alert("Error al crear el producto");
       }
     } catch (error) {
-      console.error("Error creating product:", error);
-      alert(
-        `Error al crear el producto: ${
-          error instanceof Error ? error.message : "Error de red"
-        }`
-      );
+      console.error("Error:", error);
+      alert("Error al crear el producto");
     } finally {
       setLoading(false);
     }
@@ -112,7 +130,6 @@ export default function AddProductPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Name Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -138,7 +155,6 @@ export default function AddProductPage() {
                 </div>
               </div>
 
-              {/* Description Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -164,71 +180,84 @@ export default function AddProductPage() {
                 </div>
               </div>
 
-              {/* Price and Category Fields */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Precio *
-                  </label>
-                  <Input
-                    name="price"
-                    type="number"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Categoría (Inglés) *
-                  </label>
-                  <Input
-                    name="category_en"
-                    value={formData.category_en}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Categoría (Español) *
-                  </label>
-                  <Input
-                    name="category_es"
-                    value={formData.category_es}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Image Upload Field */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Imagen del Producto
+                  Precio *
                 </label>
                 <Input
-                  name="image_file"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+                  name="price"
+                  type="number"
+                  step="0.01"
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  required
                 />
-                {imagePreview && (
-                  <div className="mt-4">
-                    <Image
-                      src={imagePreview}
-                      alt="Previsualización de la imagen"
-                      width={128}
-                      height={128}
-                      className="h-32 w-auto rounded-md border object-contain"
-                    />
-                  </div>
+              </div>
+
+              {/* UPDATED: Category Select/Input logic */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Categoría *
+                  </label>
+                  <Select
+                    value={isOtherCategory ? "other" : formData.category_es}
+                    onValueChange={handleCategoryChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccione una categoría" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {commonCategories.map((cat) => (
+                        <SelectItem key={cat.es} value={cat.es}>
+                          {cat.es}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="other">Otra...</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {isOtherCategory && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Categoría Personalizada (Español) *
+                      </label>
+                      <Input
+                        name="category_es"
+                        value={formData.category_es}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Categoría Personalizada (Inglés) *
+                      </label>
+                      <Input
+                        name="category_en"
+                        value={formData.category_en}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                  </>
                 )}
               </div>
 
-              {/* Is Featured Checkbox */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  URL de Imagen
+                </label>
+                <Input
+                  name="image_url"
+                  type="url"
+                  value={formData.image_url}
+                  onChange={handleInputChange}
+                  placeholder="https://ejemplo.com/imagen.jpg"
+                />
+              </div>
+
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="is_featured"
@@ -248,7 +277,6 @@ export default function AddProductPage() {
                 </label>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex justify-end space-x-4">
                 <Button type="button" variant="outline" asChild>
                   <Link href="/admin/products">Cancelar</Link>
