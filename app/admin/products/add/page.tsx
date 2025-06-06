@@ -18,8 +18,8 @@ import {
 import { AdminLayout } from "@/components/admin-layout";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
-// Define categories to be used in the dropdown
 const commonCategories = [
   { es: "Carnes", en: "Meats" },
   { es: "Abarrotes", en: "Groceries" },
@@ -36,6 +36,9 @@ export default function AddProductPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [isOtherCategory, setIsOtherCategory] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
     name_en: "",
     name_es: "",
@@ -44,7 +47,6 @@ export default function AddProductPage() {
     price: "",
     category_en: "",
     category_es: "",
-    image_url: "",
     is_featured: false,
   });
 
@@ -72,36 +74,46 @@ export default function AddProductPage() {
     }
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    } else {
+      setImageFile(null);
+      setImagePreview(null);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Using FormData to prepare for potential file uploads in the future if needed
+    // --- CORRECTED: Use FormData for submission ---
     const submissionData = new FormData();
     Object.entries(formData).forEach(([key, value]) => {
       submissionData.append(key, String(value));
     });
-    // For now, we are still using image_url as per the original file, but this is ready for file uploads
-    submissionData.set("price", formData.price);
+
+    if (imageFile) {
+      submissionData.append("image_file", imageFile);
+    }
 
     try {
       const response = await fetch("/api/admin/products", {
         method: "POST",
-        // When sending FormData, the browser sets the Content-Type header automatically.
-        // If you were to add file uploads, you would append the file to submissionData.
-        body: JSON.stringify({
-          ...formData,
-          price: parseFloat(formData.price),
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
+        body: submissionData, // Send the FormData object
       });
 
       if (response.ok) {
         router.push("/admin/products");
       } else {
-        alert("Error al crear el producto");
+        const errorData = await response.json();
+        alert(
+          `Error al crear el producto: ${
+            errorData.message || "Error desconocido"
+          }`
+        );
       }
     } catch (error) {
       console.error("Error:", error);
@@ -130,6 +142,7 @@ export default function AddProductPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* ... other form fields are correct ... */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -154,7 +167,6 @@ export default function AddProductPage() {
                   />
                 </div>
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -179,7 +191,6 @@ export default function AddProductPage() {
                   />
                 </div>
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Precio *
@@ -193,8 +204,6 @@ export default function AddProductPage() {
                   required
                 />
               </div>
-
-              {/* UPDATED: Category Select/Input logic */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -245,17 +254,28 @@ export default function AddProductPage() {
                 )}
               </div>
 
+              {/* Image Upload Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  URL de Imagen
+                  Imagen del Producto
                 </label>
                 <Input
-                  name="image_url"
-                  type="url"
-                  value={formData.image_url}
-                  onChange={handleInputChange}
-                  placeholder="https://ejemplo.com/imagen.jpg"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
                 />
+                {imagePreview && (
+                  <div className="mt-4">
+                    <Image
+                      src={imagePreview}
+                      alt="Previsualización"
+                      width={128}
+                      height={128}
+                      className="h-32 w-auto rounded-md border object-contain"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center space-x-2">
