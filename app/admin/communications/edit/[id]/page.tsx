@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation"; // Import useParams
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,12 +19,10 @@ import { AdminLayout } from "@/components/admin-layout";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 
-export default function EditCommunicationPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+// CORRECTED: Remove params from the function signature
+export default function EditCommunicationPage() {
   const router = useRouter();
+  const params = useParams<{ id: string }>(); // Get params using the hook
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [formData, setFormData] = useState({
@@ -38,6 +36,8 @@ export default function EditCommunicationPage({
   });
 
   useEffect(() => {
+    if (!params.id) return;
+
     async function fetchCommunication() {
       try {
         const response = await fetch(`/api/admin/communications/${params.id}`);

@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation"; // Import useParams
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,12 +12,10 @@ import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
-export default function EditPromotionPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+// CORRECTED: Remove params from the function signature
+export default function EditPromotionPage() {
   const router = useRouter();
+  const params = useParams<{ id: string }>(); // Get params using the hook
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -33,6 +31,8 @@ export default function EditPromotionPage({
   });
 
   useEffect(() => {
+    if (!params.id) return;
+
     async function fetchPromotion() {
       try {
         const response = await fetch(`/api/admin/promotions/${params.id}`);
@@ -44,7 +44,6 @@ export default function EditPromotionPage({
             description_en: promotion.description_en || "",
             description_es: promotion.description_es || "",
             image_url: promotion.image_url || "",
-            // Format dates for the input[type=date] which expects YYYY-MM-DD
             active_from: promotion.active_from
               ? new Date(promotion.active_from).toISOString().split("T")[0]
               : "",

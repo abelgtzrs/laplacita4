@@ -20,7 +20,6 @@ import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
-// Define categories to be used in the dropdown
 const commonCategories = [
   { es: "Carnes", en: "Meats" },
   { es: "Abarrotes", en: "Groceries" },
@@ -30,9 +29,10 @@ const commonCategories = [
   { es: "Panadería", en: "Bakery" },
   { es: "Limpieza", en: "Cleaning" },
   { es: "Cuidado Personal", en: "Personal Care" },
+  { es: "Comida", en: "Food" },
 ];
 
-// Remove params from the function signature
+// CORRECTED: Remove params from the function signature
 export default function EditProductPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>(); // Get params using the hook
@@ -55,7 +55,6 @@ export default function EditProductPage() {
   });
 
   useEffect(() => {
-    // No change needed here, just ensure `params.id` is available
     if (!params.id) return;
 
     async function fetchProduct() {
