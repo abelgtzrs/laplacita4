@@ -23,9 +23,8 @@ export function Header() {
     { name: t("nav.contact"), href: "/contacto" },
   ];
 
-  // IMPORTANT: Replace with your actual Uber Eats URL
   const uberEatsUrl =
-    "https://www.ubereats.com/store/la-placita-market/your-store-id";
+    "https://www.ubereats.com/store/la-placita-ftp-1508-delaware-avenue/sKQr3zMKWJ6f0TdQWYNWpA?diningMode=DELIVERY&sc=SEARCH_SUGGESTION";
 
   const toggleLanguage = () => {
     setLanguage(language === "en" ? "es" : "en");

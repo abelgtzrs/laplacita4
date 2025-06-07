@@ -59,7 +59,7 @@ export function Footer() {
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="h-5 w-5 text-yellow-400" />
-                <p className="text-green-100">laplacitaftp@hotmail.com.com</p>
+                <p className="text-green-100">laplacitaftp@hotmail.com</p>
               </div>
               <div className="flex items-start space-x-3">
                 <Clock className="h-5 w-5 text-yellow-400 mt-0.5" />
@@ -97,12 +97,6 @@ export function Footer() {
                 className="block text-green-200 hover:text-white transition-colors"
               >
                 {t("nav.contact")}
-              </Link>
-              <Link
-                href="/admin/login"
-                className="block text-yellow-300 hover:text-white transition-colors text-xs"
-              >
-                🔐 Admin Panel
               </Link>
             </div>
           </div>
