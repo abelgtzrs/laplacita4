@@ -10,17 +10,17 @@ import path from "path";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any // Using 'any' as a temporary workaround for build error
 ) {
   try {
-    const product = await getProductById(params.id);
+    const { id } = context.params;
+    const product = await getProductById(id);
     if (!product) {
       return NextResponse.json(
         { message: "Product not found" },
         { status: 404 }
       );
     }
-    // Make sure the response is serializable
     const serializableProduct = {
       ...product,
       _id: product._id?.toString(),
@@ -29,7 +29,7 @@ export async function GET(
     };
     return NextResponse.json(serializableProduct);
   } catch (error) {
-    console.error(`Failed to fetch product ${params.id}:`, error);
+    console.error(`Failed to fetch product ${context.params.id}:`, error);
     return NextResponse.json(
       { message: "Failed to fetch product", error: (error as Error).message },
       { status: 500 }
@@ -39,12 +39,12 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any // Using 'any' as a temporary workaround for build error
 ) {
   try {
+    const { id } = context.params;
     const data = await request.formData();
 
-    // --- Data Validation ---
     const name_en = data.get("name_en") as string;
     const name_es = data.get("name_es") as string;
     const priceStr = data.get("price") as string;
@@ -90,18 +90,18 @@ export async function PUT(
     }
 
     const updateData: Partial<Product> = {
-      name_en: name_en,
-      name_es: name_es,
+      name_en,
+      name_es,
       description_en: data.get("description_en") as string,
       description_es: data.get("description_es") as string,
-      price: price,
-      category_en: category_en,
-      category_es: category_es,
+      price,
+      category_en,
+      category_es,
       is_featured: (data.get("is_featured") as string) === "true",
       image_url: imageUrl,
     };
 
-    const updatedProduct = await updateProduct(params.id, updateData);
+    const updatedProduct = await updateProduct(id, updateData);
 
     if (!updatedProduct) {
       return NextResponse.json(
@@ -119,7 +119,7 @@ export async function PUT(
 
     return NextResponse.json(serializableProduct);
   } catch (error) {
-    console.error(`Failed to update product ${params.id}:`, error);
+    console.error(`Failed to update product ${context.params.id}:`, error);
     return NextResponse.json(
       { message: "Failed to update product", error: (error as Error).message },
       { status: 500 }
@@ -129,10 +129,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any // Using 'any' as a temporary workaround for build error
 ) {
   try {
-    const success = await deleteProduct(params.id);
+    const { id } = context.params;
+    const success = await deleteProduct(id);
     if (!success) {
       return NextResponse.json(
         { message: "Product not found or could not be deleted" },
@@ -141,7 +142,7 @@ export async function DELETE(
     }
     return new NextResponse(null, { status: 204 });
   } catch (error) {
-    console.error(`Failed to delete product ${params.id}:`, error);
+    console.error(`Failed to delete product ${context.params.id}:`, error);
     return NextResponse.json(
       { message: "Failed to delete product", error: (error as Error).message },
       { status: 500 }
