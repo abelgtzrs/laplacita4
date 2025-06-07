@@ -5,7 +5,6 @@ import {
   deleteCommunication,
 } from "@/lib/mongodb";
 
-// CORRECTED: The type for the 'params' object is now defined inline.
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
