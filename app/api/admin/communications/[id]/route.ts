@@ -9,10 +9,11 @@ import {
 // This is the correct way to type it to satisfy the Next.js build system.
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    const communication = await getCommunicationById(params.id);
+    const { id } = context.params; // Destructure id from context
+    const communication = await getCommunicationById(id);
     if (!communication) {
       return NextResponse.json(
         { error: "Communication not found" },
@@ -38,11 +39,12 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
+    const { id } = context.params; // Destructure id from context
     const body = await request.json();
-    const communication = await updateCommunication(params.id, body);
+    const communication = await updateCommunication(id, body);
     if (!communication) {
       return NextResponse.json(
         { error: "Communication not found" },
@@ -67,10 +69,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    const success = await deleteCommunication(params.id);
+    const { id } = context.params; // Destructure id from context
+    const success = await deleteCommunication(id);
     if (!success) {
       return NextResponse.json(
         { error: "Communication not found" },
