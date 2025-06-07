@@ -17,9 +17,12 @@ export async function GET(
         { status: 404 }
       );
     }
+    // Ensure the response is serializable
     const serializableCommunication = {
       ...communication,
       _id: communication._id?.toString(),
+      created_at: communication.created_at.toISOString(),
+      updated_at: communication.updated_at.toISOString(),
     };
     return NextResponse.json(serializableCommunication);
   } catch (error) {
@@ -47,6 +50,8 @@ export async function PUT(
     const serializableCommunication = {
       ...communication,
       _id: communication._id?.toString(),
+      created_at: communication.created_at.toISOString(),
+      updated_at: communication.updated_at.toISOString(),
     };
     return NextResponse.json(serializableCommunication);
   } catch (error) {
