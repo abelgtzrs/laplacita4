@@ -5,6 +5,8 @@ import {
   deleteCommunication,
 } from "@/lib/mongodb";
 
+// The type for the second argument is a context object which contains params.
+// This is the correct way to type it to satisfy the Next.js build system.
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
