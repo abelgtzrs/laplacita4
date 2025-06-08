@@ -104,7 +104,7 @@ export function Footer() {
 
         <div className="border-t border-green-700 mt-8 pt-8 text-center text-xs">
           <p className="text-green-200">
-            © 2024 La Placita FTP. {t("footer.made_with_love")}
+            © 2025 La Placita FTP. {t("footer.made_with_love")}
           </p>
         </div>
       </div>
