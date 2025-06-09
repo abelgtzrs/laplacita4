@@ -12,6 +12,7 @@ interface LanguageContextType {
 }
 
 const translations = {
+  // -------------------------------English translations--------------------------------------------------------------
   en: {
     // Navigation
     "nav.home": "Home",
@@ -29,6 +30,7 @@ const translations = {
     "home.featured_products": "Featured Products",
     "home.services_highlights": "Our Services",
     "home.current_promotions": "Current Promotions",
+    "home.history_title": "Our History",
     "home.about_snippet":
       "At La Placita FTP, we take pride in being a part of the Fort Pierce community since the beginning—offering authentic Hispanic products, freshly prepared food, and essential services. More than just a store, we are a trusted space where quality, commitment, and human warmth come together to serve you the way you deserve.",
 
@@ -73,6 +75,8 @@ const translations = {
     "services.check_cashing": "Check Cashing",
     "services.check_cashing_desc":
       "Quick and affordable check cashing services.",
+    "services.faxes": "Printing & Faxes",
+    "services.faxes_desc": "Affordable printing and fax services available.",
 
     //Internation Services
     "services.title_int": "International Services",
@@ -82,6 +86,14 @@ const translations = {
     // Promotions
     "promotions.title": "Special Promotions",
     "promotions.no_active": "Check back soon for new offers!",
+
+    // Whatsapp
+    "whatsapp.title": "Printing Services via WhatsApp",
+    "whatsapp.subtitle":
+      "Need to print a document? Send us your files via WhatsApp!",
+    "whatsapp.button": "Send via WhatsApp",
+    "whatsapp.format": "Accepted formats: PDF, Images, Word, Excel",
+    fb: "Follow us on Facebook",
 
     // Contact
     "contact.title": "Contact Us",
@@ -122,6 +134,8 @@ const translations = {
     "admin.delete": "Delete",
     "admin.confirm_delete": "Are you sure you want to delete this item?",
   },
+
+  // -------------------------------Spanish translations
   es: {
     // Navigation
     "nav.home": "Inicio",
@@ -139,6 +153,7 @@ const translations = {
     "home.featured_products": "Productos Destacados",
     "home.services_highlights": "Nuestros Servicios",
     "home.current_promotions": "Promociones Actuales",
+    "home.history_title": "Nuestra Historia",
     "home.about_snippet":
       "En La Placita FTP, nos enorgullece haber sido parte de la comunidad de Fort Pierce desde nuestros inicios, ofreciendo productos hispanos auténticos, alimentos frescos preparados diariamente y servicios esenciales. Más que una tienda, somos un espacio de confianza donde la calidad, el compromiso y la calidez humana se encuentran para servirte como mereces.",
 
@@ -185,6 +200,8 @@ const translations = {
     "services.check_cashing": "Cambio de Cheques",
     "services.check_cashing_desc":
       "Servicios de cambio de cheques rápidos y económicos.",
+    "services.faxes": "Impresión & Faxes",
+    "services.faxes_desc": "Servicios de impresión y fax disponibles.",
 
     // International Services
     "services.titleInt": "Servicios Internacionales",
@@ -194,6 +211,15 @@ const translations = {
     // Promotions
     "promotions.title": "Promociones Especiales",
     "promotions.no_active": "¡Vuelve pronto para nuevas ofertas!",
+
+    // Whatsapp
+    "whatsapp.title": "Servicio de Impresión por WhatsApp",
+    "whatsapp.subtitle":
+      "¿Necesitas imprimir documentos? Envíanos tus archivos por WhatsApp y los tendremos listos para recoger.",
+    "whatsapp.button": "Enviar Documentos por WhatsApp",
+    "whatsapp.format":
+      "Formatos aceptados: PDF, Word, Excel, PowerPoint, Imágenes",
+    fb: "Síguenos en Facebook",
 
     // Contact
     "contact.title": "Contáctanos",
