@@ -36,6 +36,11 @@ export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [popularFood, setPopularFood] = useState([]); // <-- New state for food items
   const [currentPromotions, setCurrentPromotions] = useState([]);
+  const [activeService, setActiveService] = useState<number | null>(null);
+
+  const handleServiceClick = (index: number) => {
+    setActiveService((prev) => (prev === index ? null : index));
+  };
 
   const services = [
     {
@@ -296,6 +301,7 @@ export default function HomePage() {
       </section>
 
       {/* --- UPDATED: Interactive Services Section --- */}
+      {/* --- CORRECTED: Interactive Services Section --- */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
@@ -305,13 +311,18 @@ export default function HomePage() {
             <div className="w-24 h-1 bg-gradient-to-r from-green-500 to-red-500 mx-auto"></div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          {/* Corrected Grid Layout */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-6">
             {services.map((service, index) => {
               const ServiceIcon = service.icon;
+              const isActive = activeService === index;
+
               return (
                 <div
                   key={index}
-                  className="group relative rounded-lg border-2 border-gray-100 p-6 text-center transition-all duration-300 hover:border-green-500 hover:shadow-xl"
+                  // onClick handler for mobile tap
+                  onClick={() => handleServiceClick(index)}
+                  className="group relative rounded-lg border-2 border-gray-100 p-6 text-center transition-all duration-300 hover:border-green-500 hover:shadow-xl cursor-pointer"
                 >
                   <div className="flex flex-col items-center">
                     <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110">
@@ -321,15 +332,20 @@ export default function HomePage() {
                       {t(service.titleKey)}
                     </h3>
                   </div>
-                  {/* Expanding section */}
-                  <div className="pt-4 max-h-0 overflow-hidden transition-all duration-500 ease-in-out group-hover:max-h-96">
+
+                  {/* Expanding section with conditional class for mobile */}
+                  <div
+                    className={`pt-4 max-h-0 overflow-hidden transition-all duration-500 ease-in-out group-hover:max-h-96 ${
+                      isActive ? "max-h-96" : ""
+                    }`}
+                  >
                     <p className="text-gray-600 text-sm mb-4">
                       {t(service.descriptionKey)}
                     </p>
                     {service.partners.length > 0 && (
                       <div className="border-t border-gray-200 pt-4">
                         <h4 className="text-xs font-bold text-gray-500 uppercase mb-3">
-                          {t("services.title")}
+                          Nuestros Socios
                         </h4>
                         <div className="flex flex-wrap gap-4 items-center justify-center">
                           {service.partners.map((partner) => (
