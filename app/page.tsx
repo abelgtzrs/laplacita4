@@ -17,6 +17,7 @@ import {
   Bus,
   CircleDollarSign,
   Landmark,
+  Printer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -35,6 +36,11 @@ export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [popularFood, setPopularFood] = useState([]); // <-- New state for food items
   const [currentPromotions, setCurrentPromotions] = useState([]);
+  const [activeService, setActiveService] = useState<number | null>(null);
+
+  const handleServiceClick = (index: number) => {
+    setActiveService((prev) => (prev === index ? null : index));
+  };
 
   const services = [
     {
@@ -81,6 +87,12 @@ export default function HomePage() {
       icon: CircleDollarSign,
       titleKey: "services.check_cashing",
       descriptionKey: "services.check_cashing_desc",
+      partners: [],
+    },
+    {
+      icon: Printer,
+      titleKey: "services.faxes",
+      descriptionKey: "services.faxes_desc",
       partners: [],
     },
   ];
@@ -289,6 +301,7 @@ export default function HomePage() {
       </section>
 
       {/* --- UPDATED: Interactive Services Section --- */}
+      {/* --- CORRECTED: Interactive Services Section --- */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
@@ -298,13 +311,18 @@ export default function HomePage() {
             <div className="w-24 h-1 bg-gradient-to-r from-green-500 to-red-500 mx-auto"></div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          {/* Corrected Grid Layout */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-6">
             {services.map((service, index) => {
               const ServiceIcon = service.icon;
+              const isActive = activeService === index;
+
               return (
                 <div
                   key={index}
-                  className="group relative rounded-lg border-2 border-gray-100 p-6 text-center transition-all duration-300 hover:border-green-500 hover:shadow-xl"
+                  // onClick handler for mobile tap
+                  onClick={() => handleServiceClick(index)}
+                  className="group relative rounded-lg border-2 border-gray-100 p-6 text-center transition-all duration-300 hover:border-green-500 hover:shadow-xl cursor-pointer"
                 >
                   <div className="flex flex-col items-center">
                     <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110">
@@ -314,8 +332,13 @@ export default function HomePage() {
                       {t(service.titleKey)}
                     </h3>
                   </div>
-                  {/* Expanding section */}
-                  <div className="pt-4 max-h-0 overflow-hidden transition-all duration-500 ease-in-out group-hover:max-h-96">
+
+                  {/* Expanding section with conditional class for mobile */}
+                  <div
+                    className={`pt-4 max-h-0 overflow-hidden transition-all duration-500 ease-in-out group-hover:max-h-96 ${
+                      isActive ? "max-h-96" : ""
+                    }`}
+                  >
                     <p className="text-gray-600 text-sm mb-4">
                       {t(service.descriptionKey)}
                     </p>
@@ -353,7 +376,7 @@ export default function HomePage() {
       <section className="py-16 bg-gradient-to-r from-green-50 to-red-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-6">
-            Nuestra Historia
+            {t("home.history_title")}
           </h2>
           <p className="text-lg text-gray-700 leading-relaxed">
             {t("home.about_snippet")}
@@ -369,11 +392,10 @@ export default function HomePage() {
               <MessageCircle className="h-8 w-8 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Servicio de Impresión por WhatsApp
+              {t("whatsapp.title")}
             </h2>
             <p className="text-lg text-gray-700 mb-6">
-              ¿Necesitas imprimir documentos? Envíanos tus archivos por WhatsApp
-              y los tendremos listos para recoger.
+              {t("whatsapp.subtitle")}
             </p>
             <Button
               asChild
@@ -386,12 +408,10 @@ export default function HomePage() {
                 rel="noopener noreferrer"
               >
                 <MessageCircle className="mr-2 h-5 w-5" />
-                Enviar Documentos por WhatsApp
+                {t("whatsapp.button")}
               </a>
             </Button>
-            <p className="text-sm text-gray-600 mt-4">
-              Formatos aceptados: PDF, Word, Excel, PowerPoint, Imágenes
-            </p>
+            <p className="text-sm text-gray-600 mt-4">{t("whatsapp.format")}</p>
           </div>
         </div>
       </section>
@@ -400,9 +420,7 @@ export default function HomePage() {
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Encuéntranos y Síguenos
-            </h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t("fb")}</h2>
             <p className="text-lg text-gray-600">
               1508 Delaware Ave, Fort Pierce, FL 34950
             </p>
@@ -412,11 +430,10 @@ export default function HomePage() {
             {/* Left Column: Google Map */}
             <div className="aspect-w-16 aspect-h-9 bg-gray-200 rounded-lg overflow-hidden shadow-xl">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4439.850310143432!2d-80.3419013238318!3d27.4438694370617!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x88def1a13fbf8171%3A0xb04570d0f60af70!2s1508%20Delaware%20Ave%2C%20Fort%20Pierce%2C%20FL%2034950!5e1!3m2!1sen!2sus!4v1749179021559!5m2!1sen!2sus"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3540.816216717518!2d-80.3419831237173!3d27.443837776334753!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x88def194f69636f3%3A0x3b810b158ab0f8dc!2sLa%20Placita%20FTP!5e0!3m2!1sen!2sus!4v1749439130255!5m2!1sen!2sus"
                 width="600"
                 height="576"
                 loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
               ></iframe>
             </div>
 
