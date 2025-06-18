@@ -403,7 +403,7 @@ export default function HomePage() {
               className="bg-green-500 hover:bg-green-600"
             >
               <a
-                href="https://wa.me/772421416"
+                href="https://wa.me/7722421416"
                 target="_blank"
                 rel="noopener noreferrer"
               >
