@@ -40,10 +40,10 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="flex-shrink-0 flex items-center">
             <Image
-              src="/logo.png"
+              src="/legacy_logo.png"
               alt="La Placita FTP Logo"
-              width={80} // Set explicit width
-              height={80} // Set explicit height
+              width={160} // Set explicit width
+              height={160} // Set explicit height
               className="object-contain"
             />
           </Link>
