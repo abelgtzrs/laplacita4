@@ -120,3 +120,29 @@
     @apply bg-background text-foreground;
   }
 }
+.embla-reviews {
+  overflow: hidden;
+  padding: 1rem 0;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+.embla-reviews__container {
+  display: flex;
+}
+.embla-reviews__slide {
+  flex: 0 0 90%; /* On mobile, show almost one full column */
+  min-width: 0;
+  padding-left: 1rem;
+}
+
+@media (min-width: 768px) {
+  .embla-reviews__slide {
+    flex: 0 0 50%; /* On tablets, show two columns */
+  }
+}
+
+@media (min-width: 1024px) {
+  .embla-reviews__slide {
+    flex: 0 0 33.33%; /* On desktops, show three columns */
+  }
+}
