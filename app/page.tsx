@@ -142,10 +142,10 @@ export default function HomePage() {
         </div>
         <div className="relative z-20 h-full flex items-center">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 text-shadow-lg bg-color-red-600">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 text-shadow-xl bg-color-red-600 drop-shadow-[0_3px_2px_rgba(0,0,0,0.8)]">
               {t("home.welcome")}
             </h1>
-            <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
+            <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto drop-shadow-[0_3px_2px_rgba(0,0,0,0.8)]">
               {t("home.subtitle")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
