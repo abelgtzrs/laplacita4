@@ -5,7 +5,14 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { LogOut, Package, Tag, MessageSquare } from "lucide-react";
+import {
+  LogOut,
+  Package,
+  Tag,
+  MessageSquare,
+  BadgeDollarSign,
+  DollarSign,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/language-context";
 
@@ -54,8 +61,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       icon: MessageSquare,
       current: pathname.startsWith("/admin/communications"),
     },
-  ];
 
+    {
+      name: "Tipo de Cambio",
+      href: "/admin/exchangerate",
+      icon: DollarSign,
+      current: pathname.startsWith("/admin/exchangerate"),
+    },
+  ];
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
