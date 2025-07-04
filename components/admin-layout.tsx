@@ -5,14 +5,7 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import {
-  LogOut,
-  Package,
-  Tag,
-  MessageSquare,
-  BadgeDollarSign,
-  DollarSign,
-} from "lucide-react";
+import { LogOut, Package, Tag, MessageSquare, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/language-context";
 
@@ -84,7 +77,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Admin Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-white shadow-sm border-b sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
@@ -114,21 +107,22 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
       <div className="flex">
         {/* Sidebar */}
-        <nav className="w-64 bg-white shadow-sm min-h-screen">
-          <div className="p-4">
-            <div className="space-y-2">
+        <nav className="bg-white shadow-md min-h-screen w-16 md:w-64 transition-all duration-300 ease-in-out">
+          <div className="p-2 md:p-4 flex flex-col h-full">
+            <div className="space-y-2 flex-1">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  title={item.name}
+                  className={`flex items-center px-2 md:px-3 py-2 rounded-md text-sm font-medium transition-colors justify-center md:justify-start ${
                     item.current
-                      ? "bg-green-100 text-green-700 border-r-2 border-green-700"
+                      ? "bg-green-100 text-green-700"
                       : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                   }`}
                 >
-                  <item.icon className="h-5 w-5 mr-3" />
-                  {item.name}
+                  <item.icon className="h-5 w-5 md:mr-3" />
+                  <span className="hidden md:inline">{item.name}</span>
                 </Link>
               ))}
             </div>
@@ -136,7 +130,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </nav>
 
         {/* Main Content */}
-        <main className="flex-1 p-8">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+          {children}
+        </main>
       </div>
     </div>
   );
