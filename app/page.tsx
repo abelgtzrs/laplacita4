@@ -1,8 +1,61 @@
+/**
+ * HOMEPAGE COMPONENT - LA PLACITA FTP
+ * ===================================
+ *
+ * Main landing page for La Placita FTP website featuring multiple sections:
+ *
+ * 1. HERO SECTION
+ *    - Image slideshow background with store photos
+ *    - Welcome message and call-to-action buttons
+ *    - Responsive design for all screen sizes
+ *
+ * 2. FEATURED PRODUCTS & POPULAR FOOD
+ *    - Dual-column layout showcasing products
+ *    - Left: Non-food featured products
+ *    - Right: Popular food items
+ *    - Loading states with skeleton animations
+ *
+ * 3. INTERACTIVE SERVICES SECTION
+ *    - 6 service cards with hover/tap interactions
+ *    - Partner logos revealed on interaction
+ *    - Mobile-friendly expandable cards
+ *
+ * 4. WHATSAPP PRINTING SERVICE
+ *    - Dedicated promotion for printing services
+ *    - Direct WhatsApp integration
+ *
+ * 5. LOCATION MAP & FACEBOOK FEED
+ *    - Google Maps integration for store location
+ *    - Facebook page feed for social proof
+ *
+ * 6. GOOGLE REVIEWS CAROUSEL
+ *    - Customer testimonials and ratings
+ *    - Carousel display for multiple reviews
+ *
+ * 7. ABOUT SNIPPET
+ *    - Brief company history and description
+ *
+ * 8. CURRENT PROMOTIONS
+ *    - Dynamic display of active promotions
+ *    - Conditionally rendered based on available data
+ *
+ * TECHNICAL FEATURES:
+ * - Multi-language support via useLanguage context
+ * - Responsive design with Tailwind CSS
+ * - Dynamic data fetching from API endpoints
+ * - Interactive elements with state management
+ * - SEO-optimized structure and content
+ */
+
 "use client";
 
+// === IMPORTS ===
+// React and Next.js core
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+
+// Icons from Lucide React
 import {
   ArrowRight,
   ShoppingCart,
@@ -19,11 +72,24 @@ import {
   Landmark,
   Printer,
 } from "lucide-react";
+
+// UI Components
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+
+// Context and Custom Components
 import { useLanguage } from "@/contexts/language-context";
 import ImageSlideshow from "@/components/ImageSlideshow";
+import GoogleReviewsCarousel from "@/components/GoogleReviewsCarousel";
 
+// ===========================
+// CONSTANTS & CONFIGURATION
+// ===========================
+
+/**
+ * Store Images Configuration
+ * Array of image paths used in the hero slideshow
+ */
 const storeImages = [
   "/store/galletas.png",
   "/store/chips.png",
@@ -31,17 +97,60 @@ const storeImages = [
   "/store/verdura.jpg",
 ];
 
+// =========================
+// MAIN COMPONENT FUNCTION
+// =========================
+
 export default function HomePage() {
+  // ========================
+  // STATE MANAGEMENT
+  // ========================
+
+  /**
+   * Language and translation context
+   */
   const { t, language } = useLanguage();
+
+  /**
+   * Featured products state - stores non-food featured products
+   */
   const [featuredProducts, setFeaturedProducts] = useState([]);
-  const [popularFood, setPopularFood] = useState([]); // <-- New state for food items
+
+  /**
+   * Popular food items state - stores featured food products
+   */
+  const [popularFood, setPopularFood] = useState([]);
+
+  /**
+   * Current promotions state - stores active promotions
+   */
   const [currentPromotions, setCurrentPromotions] = useState([]);
+
+  /**
+   * Active service state - tracks which service card is expanded on mobile
+   */
   const [activeService, setActiveService] = useState<number | null>(null);
 
+  // ======================
+  // EVENT HANDLERS
+  // ======================
+
+  /**
+   * Handle service card click/tap
+   * Toggles the expanded state of service cards on mobile devices
+   */
   const handleServiceClick = (index: number) => {
     setActiveService((prev) => (prev === index ? null : index));
   };
 
+  // ======================
+  // SERVICES CONFIGURATION
+  // ======================
+
+  /**
+   * Services array configuration
+   * Defines all available services with their icons, descriptions, and partner logos
+   */
   const services = [
     {
       icon: Landmark,
@@ -97,6 +206,15 @@ export default function HomePage() {
     },
   ];
 
+  // ======================
+  // DATA FETCHING EFFECT
+  // ======================
+
+  /**
+   * Load data from API endpoints
+   * Fetches featured products, promotions, and popular food items
+   * Runs once on component mount
+   */
   useEffect(() => {
     async function loadData() {
       try {
@@ -130,9 +248,21 @@ export default function HomePage() {
     loadData();
   }, []);
 
+  // ======================
+  // COMPONENT RENDER
+  // ======================
+
   return (
     <div className="min-h-screen">
-      {/* Hero Section remains the same */}
+      {/* ================================================ */}
+      {/* HERO SECTION                                     */}
+      {/* ================================================ */}
+      {/* 
+        Hero section with image slideshow background
+        - Features store images rotating in slideshow
+        - Overlaid with welcome text and call-to-action buttons
+        - Responsive design for mobile and desktop
+      */}
       <section className="relative h-[500px] md:h-[600px] overflow-hidden">
         <div className="absolute inset-0">
           <div className="relative h-full bg-gradient-to-r from-green-600 via-yellow-500 to-red-600">
@@ -175,11 +305,28 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- UPDATED: Featured Products & Popular Food Section --- */}
+      {/* ================================================ */}
+      {/* FEATURED PRODUCTS & POPULAR FOOD SECTION        */}
+      {/* ================================================ */}
+      {/* 
+        Dual-column layout featuring:
+        - Left: Featured Products (non-food items)
+        - Right: Popular Food Items
+        - Responsive grid layout with product cards
+        - Loading states with skeleton animations
+      */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-16">
-            {/* Left Column: Featured Products */}
+            {/* ========================================== */}
+            {/* LEFT COLUMN: FEATURED PRODUCTS            */}
+            {/* ========================================== */}
+            {/* 
+              Non-food featured products display
+              - Product cards with images and pricing
+              - Skeleton loading states
+              - Link to all products page
+            */}
             <div>
               <div className="text-center lg:text-left mb-8">
                 <h2 className="text-3xl font-bold text-gray-900 mb-4">
@@ -238,7 +385,15 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Right Column: Popular Food */}
+            {/* ========================================== */}
+            {/* RIGHT COLUMN: POPULAR FOOD                */}
+            {/* ========================================== */}
+            {/* 
+              Popular food items display
+              - Featured food products with images and pricing
+              - Skeleton loading states while data loads
+              - Link to food menu page
+            */}
             <div>
               <div className="text-center lg:text-left mb-8">
                 <h2 className="text-3xl font-bold text-gray-900 mb-4">
@@ -300,8 +455,16 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- UPDATED: Interactive Services Section --- */}
-      {/* --- CORRECTED: Interactive Services Section --- */}
+      {/* ================================================ */}
+      {/* INTERACTIVE SERVICES SECTION                   */}
+      {/* ================================================ */}
+      {/* 
+        Interactive service cards showcase
+        - 6 main services with partner logos
+        - Hover effects and mobile tap-to-expand
+        - Responsive grid layout (1 to 6 columns based on screen size)
+        - Partner logos display on hover/tap
+      */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
@@ -311,7 +474,7 @@ export default function HomePage() {
             <div className="w-24 h-1 bg-gradient-to-r from-green-500 to-red-500 mx-auto"></div>
           </div>
 
-          {/* Corrected Grid Layout */}
+          {/* Service Cards Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-6">
             {services.map((service, index) => {
               const ServiceIcon = service.icon;
@@ -372,19 +535,16 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      {/* About Snippet */}
-      <section className="py-16 bg-gradient-to-r from-green-50 to-red-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">
-            {t("home.history_title")}
-          </h2>
-          <p className="text-lg text-gray-700 leading-relaxed">
-            {t("home.about_snippet")}
-          </p>
-        </div>
-      </section>
 
-      {/* WhatsApp Printing Service */}
+      {/* ================================================ */}
+      {/* WHATSAPP PRINTING SERVICE SECTION             */}
+      {/* ================================================ */}
+      {/* 
+        WhatsApp printing service promotion
+        - Call-to-action for document printing service
+        - Direct link to WhatsApp business number
+        - Instructions for formatting print requests
+      */}
       <section className="py-16 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="bg-green-50 border-2 border-green-200 rounded-lg p-8">
@@ -416,7 +576,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- UPDATED: Location / Map & Facebook Feed Section --- */}
+      {/* ================================================ */}
+      {/* LOCATION MAP & FACEBOOK FEED SECTION           */}
+      {/* ================================================ */}
+      {/* 
+        Dual-column layout featuring:
+        - Left: Interactive Google Maps embed showing store location
+        - Right: Facebook page feed for social media integration
+        - Business address and contact information
+      */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
@@ -427,7 +595,15 @@ export default function HomePage() {
             <div className="w-24 h-1 bg-gradient-to-r from-green-500 to-red-500 mx-auto mt-4"></div>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Column: Google Map */}
+            {/* ========================================== */}
+            {/* LEFT COLUMN: GOOGLE MAP                    */}
+            {/* ========================================== */}
+            {/* 
+              Interactive Google Maps embed
+              - Shows exact store location
+              - Allows users to get directions
+              - Responsive iframe with proper aspect ratio
+            */}
             <div className="aspect-w-16 aspect-h-9 bg-gray-200 rounded-lg overflow-hidden shadow-xl">
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3540.816216717518!2d-80.3419831237173!3d27.443837776334753!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x88def194f69636f3%3A0x3b810b158ab0f8dc!2sLa%20Placita%20FTP!5e0!3m2!1sen!2sus!4v1749439130255!5m2!1sen!2sus"
@@ -437,11 +613,16 @@ export default function HomePage() {
               ></iframe>
             </div>
 
-            {/* Right Column: Facebook Feed */}
+            {/* ========================================== */}
+            {/* RIGHT COLUMN: FACEBOOK FEED               */}
+            {/* ========================================== */}
+            {/* 
+              Facebook page feed integration
+              - Displays latest posts from business page
+              - Social proof and community engagement
+              - Embedded Facebook page plugin
+            */}
             <div className="rounded-lg shadow-xl bg-white p-4">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">
-                Síguenos en Facebook
-              </h3>
               <div className="aspect-w-16 aspect-h-9 md:aspect-h-16 overflow-hidden rounded-md">
                 <iframe
                   src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D61576133441458&tabs=timeline&width=500&height=500&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true&appId"
@@ -453,14 +634,52 @@ export default function HomePage() {
                   allowFullScreen={true}
                   allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
                 ></iframe>
-                {/* --- END OF FACEBOOK FEED EMBED CODE AREA --- */}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Current Promotions */}
+      {/* ================================================ */}
+      {/* GOOGLE REVIEWS CAROUSEL SECTION               */}
+      {/* ================================================ */}
+      {/* 
+        Customer reviews and testimonials
+        - Displays Google reviews in a carousel format
+        - Shows customer feedback and ratings
+        - Builds trust and social proof
+      */}
+
+      {/* ================================================ */}
+      {/* ABOUT SNIPPET SECTION                          */}
+      {/* ================================================ */}
+      {/* 
+        Brief company history and description
+        - Provides context about La Placita FTP
+        - Builds trust and credibility
+        - Styled with gradient background
+      */}
+      <section className="py-16 bg-gradient-to-r from-green-50 to-red-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-6">
+            {t("home.history_title")}
+          </h2>
+          <p className="text-lg text-gray-700 leading-relaxed">
+            {t("home.about_snippet")}
+          </p>
+        </div>
+      </section>
+
+      {/* ================================================ */}
+      {/* CURRENT PROMOTIONS SECTION                     */}
+      {/* ================================================ */}
+      {/* 
+        Active promotions display
+        - Conditional rendering based on available promotions
+        - Grid layout for multiple promotions
+        - Image and text content for each promotion
+        - Responsive design for mobile and desktop
+      */}
       {currentPromotions.length > 0 && (
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
