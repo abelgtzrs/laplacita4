@@ -166,26 +166,53 @@ export default function FoodPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
               <div className="text-center">
-                <div className="font-bold text-lg">Lunes - Miércoles</div>
+                <div className="font-bold text-lg">Lunes</div>
 
+                <div className="text-sm opacity-90">Caldo de Pollo</div>
+                <div className="text-sm opacity-90">Arroz Chino</div>
+              </div>
+
+              <div className="text-center">
+                <div className="font-bold text-lg">Martes</div>
+
+                <div className="text-sm opacity-90">Tamales de Puerco (mañana)</div>
+                <div className="text-sm opacity-90">Caldo de Pollo</div>
+              </div>
+
+              <div className="text-center">
+                <div className="font-bold text-lg">Miércoles</div>
+
+                <div className="text-sm opacity-90">Mole de Pollo</div>
                 <div className="text-sm opacity-90">Caldo de Res</div>
               </div>
 
               <div className="text-center">
                 <div className="font-bold text-lg">Jueves</div>
 
-                <div className="text-sm opacity-90">Birria de Res</div>
+                <div className="text-sm opacity-90">Chile Relleno</div>
+                <div className="text-sm opacity-90">Caldo de Pollo</div>
               </div>
 
               <div className="text-center">
                 <div className="font-bold text-lg">Viernes</div>
 
-                <div className="text-sm opacity-90">Mojarra Frita</div>
+                <div className="text-sm opacity-90">Tamales de Pollo (mañana)</div>
+                <div className="text-sm opacity-90">Caldo de Res</div>
               </div>
 
               <div className="text-center">
-                <div className="font-bold text-lg">Sábado - Domingo</div>
+                <div className="font-bold text-lg">Sábado</div>
 
+                <div className="text-sm opacity-90">Caldo de Gallina</div>
+                <div className="text-sm opacity-90">Caldo de Camarón</div>
+                <div className="text-sm opacity-90">Menudo</div>
+              </div>
+
+              <div className="text-center">
+                <div className="font-bold text-lg">Domingo</div>
+
+                <div className="text-sm opacity-90">Mole de Pollo</div>
+                <div className="text-sm opacity-90">Caldo de Res</div>
                 <div className="text-sm opacity-90">Menudo</div>
               </div>
             </div>
