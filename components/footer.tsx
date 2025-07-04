@@ -49,26 +49,26 @@ export function Footer() {
             <h3 className="text-lg font-semibold mb-4">{t("contact.title")}</h3>
             <div className="space-y-3">
               <div className="flex items-start space-x-3">
-                <MapPin className="h-5 w-5 text-yellow-400 mt-0.5" />
+                <MapPin className="h-5 w-5 text-white-400 mt-0.5" />
                 <div>
                   <p className="text-green-100">1508 Delaware Ave</p>
                   <p className="text-green-100">Fort Pierce, FL 34950</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
-                <Phone className="h-5 w-5 text-yellow-400" />
+                <Phone className="h-5 w-5 text-white-400" />
                 <p className="text-green-100">(772) 242-1416</p>
               </div>
               <div className="flex items-center space-x-3">
-                <PrinterCheck className="h-5 w-5 text-yellow-400" />
+                <PrinterCheck className="h-5 w-5 text-white-400" />
                 <p className="text-green-100">(772) 242-1416</p>
               </div>
               <div className="flex items-center space-x-3">
-                <Mail className="h-5 w-5 text-yellow-400" />
+                <Mail className="h-5 w-5 text-white-400" />
                 <p className="text-green-100">laplacitaftp@hotmail.com</p>
               </div>
               <div className="flex items-start space-x-3">
-                <Clock className="h-5 w-5 text-yellow-400 mt-0.5" />
+                <Clock className="h-5 w-5 text-white-400 mt-0.5" />
                 <div>
                   <p className="text-green-100">Mon-Sun: 5:00 AM - 9:00 PM</p>
                 </div>
