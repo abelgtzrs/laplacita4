@@ -8,6 +8,8 @@ import {
   Phone,
   Mail,
   Clock,
+  Printer,
+  PrinterCheck,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 
@@ -55,6 +57,10 @@ export function Footer() {
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="h-5 w-5 text-yellow-400" />
+                <p className="text-green-100">(772) 242-1416</p>
+              </div>
+              <div className="flex items-center space-x-3">
+                <PrinterCheck className="h-5 w-5 text-yellow-400" />
                 <p className="text-green-100">(772) 242-1416</p>
               </div>
               <div className="flex items-center space-x-3">

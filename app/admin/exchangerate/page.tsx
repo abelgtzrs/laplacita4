@@ -49,6 +49,7 @@ function MainComponent() {
     Banrural: "",
     "Banco Industrial": "",
     "Banco Azteca GT": "",
+    "Banco G&T Continental": "",
     // Colombia banks (USD to COP)
     Bancolombia: "",
     "Grupo Éxito": "",
@@ -103,7 +104,12 @@ function MainComponent() {
     Guatemala: {
       currency: "GTQ",
       flag: "🇬🇹",
-      banks: ["Banrural", "Banco Industrial", "Banco Azteca GT"],
+      banks: [
+        "Banrural",
+        "Banco Industrial",
+        "Banco Azteca GT",
+        "Banco G&T Continental",
+      ],
     },
     Colombia: {
       currency: "COP",
@@ -227,16 +233,8 @@ function MainComponent() {
         return;
       }
 
-      // Draw background gradient
-      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height); // Vertical gradient
-      gradient.addColorStop(0, "#f8f9fa"); // Top color
-      gradient.addColorStop(1, "#e9ecef"); // Bottom color
-      ctx.fillStyle = gradient; // Set fill style
-      ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the background
-
       // Draw header bar
       ctx.fillStyle = logoType === "intermex" ? "#e74c3c" : "#3498db"; // Header color based on logo
-      ctx.fillRect(0, 0, canvas.width, headerHeight); // Header rectangle
 
       // Draw logo placeholder (rectangle + text)
       ctx.fillStyle = "#ffffff"; // Logo background
@@ -257,7 +255,7 @@ function MainComponent() {
       };
       // Dynamically set the store logo path based on logoType
       const storeLogoPath =
-        logoType === "intermex" ? "/intermex.png" : "/ria.png";
+        logoType === "intermex" ? "/logos/intermex.png" : "/logos/ria.png";
       const cornerLogoPath = "/storelogo.png"; // Path to your actual store logo (corner)
 
       // Preload all flag images, store logo, and corner logo before drawing
@@ -293,11 +291,7 @@ function MainComponent() {
           0,
           logoHeight,
           logoHeight
-        ); // Placeholder square
-        ctx.font = "bold 32px Arial";
-        ctx.fillStyle = "#888";
-        ctx.textAlign = "center";
-        ctx.fillText("LOGO", canvas.width / 2, logoHeight / 2 + 10);
+        );
       }
 
       // --- Draw actual store logo in the top-left corner ---
@@ -307,7 +301,7 @@ function MainComponent() {
         cornerLogoImg.naturalHeight
       ) {
         // Draw at 120x120px, 30px from top and left
-        ctx.drawImage(cornerLogoImg, 30, 30, 120, 120);
+        ctx.drawImage(cornerLogoImg, 30, 0, 250, 250);
       }
 
       // Draw date below header
@@ -325,7 +319,7 @@ function MainComponent() {
       let currentY1 = headerHeight + 100; // Starting Y for left column (pushed down)
       let currentY2 = headerHeight + 100; // Starting Y for right column (pushed down)
       const lineHeight = 18; // Height for each bank row
-      const sectionSpacing = 10; // Space between country sections
+      const sectionSpacing = 30; // Space between country sections
 
       // --- Country Distribution Logic ---
       let countriesForColumns = [...selectedCountries]; // Copy selected countries
@@ -357,7 +351,7 @@ function MainComponent() {
           if (!countryData) return; // Skip if not found
 
           // Add top padding before country section
-          currentY += 18;
+          currentY += 100;
 
           // --- Draw flag image (or placeholder if not loaded) ---
           const flagImg = flagMap[countryName];
@@ -390,7 +384,7 @@ function MainComponent() {
 
             // Draw bank name (prominent)
             ctx.fillStyle = "#2c3e50"; // Bank name color
-            ctx.font = "bold 22px Arial"; // Bank name font
+            ctx.font = "bold 28px Arial"; // Bank name font
             ctx.textAlign = "left"; // Left align
             ctx.fillText(`${bank}:`, columnX + 10, currentY + 8); // Shifted bank name left
 
@@ -419,7 +413,7 @@ function MainComponent() {
 
       // --- Draw Vertical Divider Between Columns ---
       const dividerX = canvas.width / 2 + 10; // X position for divider
-      const dividerStartY = headerHeight + 90; // Start below the title
+      const dividerStartY = headerHeight + 180; // Start below the title
       const dividerEndY = canvas.height - 40; // End with bottom padding
       ctx.strokeStyle = "#bdc3c7"; // Divider color
       ctx.lineWidth = 3; // Divider width
@@ -471,17 +465,11 @@ function MainComponent() {
                 min-height: 1100px;
                 margin: 0 auto;
                 background: white;
-                padding: 80px;
+                padding: 30px;
                 box-shadow: 0 0 20px rgba(0,0,0,0.1);
               }
               .header { 
-                background: linear-gradient(135deg, ${
-                  logoType === "intermex"
-                    ? "#e74c3c, #c0392b"
-                    : "#3498db, #2980b9"
-                }); 
                 color: #fff; 
-                padding: 18px 30px 14px 30px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -509,18 +497,17 @@ function MainComponent() {
               .date-title {
                 text-align: center;
                 padding: 10px 0 10px 0;
-                background: #f8f9fa;
                 border-radius: 8px;
                 margin-bottom: 8px;
               }
               .date { 
-                font-size: 18px; 
+                font-size: 28px; 
                 color: #111; 
                 margin-bottom: 10px;
                 font-weight: bold;
               }
               .title { 
-                font-size: 32px; 
+                font-size: 40px; 
                 font-weight: bold; 
                 color: #111;
                 letter-spacing: 2px;
@@ -536,7 +523,6 @@ function MainComponent() {
                 border-radius: 12px;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.1);
                 overflow: hidden;
-                padding-bottom: 20px; /* Add some padding at the bottom of each section */
               }
               .country-header {
                 background: linear-gradient(135deg, #34495e, #2c3e50);
@@ -545,7 +531,6 @@ function MainComponent() {
                 display: flex;
                 align-items: center;
                 gap: 15px;
-                margin-bottom: 15px;
                 font-weight: bold;
               }
               .flag-placeholder {
@@ -599,6 +584,7 @@ function MainComponent() {
               }
               .bank-name {
                 font-weight: bold;
+                font-size: 20px;
                 color: #111;
               }
               .rate {
@@ -626,13 +612,15 @@ function MainComponent() {
               <div class="header">
                 <div class="logo-placeholder">LOGO</div>
                 <div class="company-name">${
-                  logoType === "intermex" ? "INTERMEX" : "RIA"
+                  logoType === "intermex"
+                    ? `<img src="${window.location.origin}/logos/intermex.png" alt="INTERMEX" style="height: 180px;" />`
+                    : `<img src="${window.location.origin}/logos/ria.png" alt="RIA" style="height: 180px;" />`
                 }</div>
               </div>
               
               <div class="date-title">
                 <div class="date">${getCurrentDate()}</div>
-                <div class="title">EXCHANGE RATES</div>
+                <div class="title">TIPO DE CAMBIO</div>
               </div>
               
               <div class="rates-container">
@@ -648,7 +636,6 @@ function MainComponent() {
                         (bank) => `
                       <div class="bank-row">
                         <div class="bank-info">
-                          <div class="bank-logo-placeholder">BANK</div>
                           <div class="bank-name">${bank}</div>
                         </div>
                         <div class="rate">${rates[bank]} MXN</div>
@@ -671,7 +658,6 @@ function MainComponent() {
                         (bank) => `
                       <div class="bank-row">
                         <div class="bank-info">
-                          <div class="bank-logo-placeholder">BANK</div>
                           <div class="bank-name">${bank}</div>
                         </div>
                         <div class="rate">${rates[bank]} HNL</div>
@@ -694,7 +680,6 @@ function MainComponent() {
                         (bank) => `
                       <div class="bank-row">
                         <div class="bank-info">
-                          <div class="bank-logo-placeholder">BANK</div>
                           <div class="bank-name">${bank}</div>
                         </div>
                         <div class="rate">${rates[bank]} GTQ</div>
@@ -717,7 +702,6 @@ function MainComponent() {
                         (bank) => `
                       <div class="bank-row">
                         <div class="bank-info">
-                          <div class="bank-logo-placeholder">BANK</div>
                           <div class="bank-name">${bank}</div>
                         </div>
                         <div class="rate">${rates[bank]} COP</div>
@@ -740,7 +724,6 @@ function MainComponent() {
                         (bank) => `
                       <div class="bank-row">
                         <div class="bank-info">
-                          <div class="bank-logo-placeholder">BANK</div>
                           <div class="bank-name">${bank}</div>
                         </div>
                         <div class="rate">${rates[bank]} HTG</div>
@@ -817,9 +800,9 @@ function MainComponent() {
         // Generate a random-ish rate for testing
         let rate;
         if (data.currency === "MXN") {
-          rate = (Math.random() * (17.5 - 16.0) + 16.0).toFixed(2);
+          rate = (Math.random() * (19 - 18.0) + 18.0).toFixed(2);
         } else if (data.currency === "HNL") {
-          rate = (Math.random() * (24.7 - 24.5) + 24.5).toFixed(2);
+          rate = (Math.random() * (24.7 - 24.5) + 25).toFixed(2);
         } else if (data.currency === "GTQ") {
           rate = (Math.random() * (7.8 - 7.6) + 7.6).toFixed(2);
         } else if (data.currency === "COP") {
@@ -851,7 +834,7 @@ function MainComponent() {
       <div className="max-w-5xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-4 mb-4">
           <h1 className="text-5xl font-bold text-gray-800 mb-4 text-center">
-            Tipos de Camibio
+            Tipos de Cambio
           </h1>
 
           {/* Country Selection */}
@@ -866,7 +849,7 @@ function MainComponent() {
                   onClick={() => handleCountryToggle(country)}
                   className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
                     selectedCountries.includes(country)
-                      ? "bg-green-500 text-white border-green-500"
+                      ? "bg-blue-700 text-white border-blue-500"
                       : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                   }`}
                 >
@@ -874,24 +857,19 @@ function MainComponent() {
                 </button>
               ))}
             </div>
-            <p className="text-sm text-gray-500 text-center mt-2">
-              {selectedCountries.length === 0
-                ? "✅ Los países seleccionados mostrarán campos de entrada abajo"
-                : "Por favor complete todos los campos para los países seleccionados con tasas válidas para habilitar la exportación"}
-            </p>
           </div>
 
           {/* Logo Toggle */}
           <div className="mb-4 text-center">
             <label className="text-md font-medium text-gray-700 mr-3">
-              Compañia:
+              Compañía:
             </label>
             <div className="inline-flex rounded-md shadow-sm">
               <button
                 onClick={() => setLogoType("intermex")}
                 className={`px-3 py-1.5 text-sm font-medium rounded-l-md border ${
                   logoType === "intermex"
-                    ? "bg-green-500 text-white border-green-500"
+                    ? "bg-green-700 text-white border-green-600"
                     : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                 }`}
               >
@@ -967,48 +945,48 @@ function MainComponent() {
               {/* Preview Buttons */}
               <div className="mt-4 bg-gray-100 rounded-lg shadow-inner p-4">
                 <h3 className="text-md font-medium text-gray-700 mb-2 text-center">
-                  Vista Previa de Plantillas
+                  Vista Previa
                 </h3>
                 <div className="flex justify-center space-x-3">
                   <button
                     onClick={() => generateTemplate("pdf", true)}
                     disabled={!allFieldsValid() || isGenerating}
-                    className="px-4 py-1.5 bg-red-400 text-white rounded-md hover:bg-red-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    className="px-4 py-1.5 bg-red-700 text-white rounded-md hover:bg-red-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
-                    Vista Previa PDF
+                    PDF
                   </button>
                   <button
                     onClick={() => generateTemplate("png", true)}
                     disabled={!allFieldsValid() || isGenerating}
-                    className="px-4 py-1.5 bg-blue-400 text-white rounded-md hover:bg-blue-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    className="px-4 py-1.5 bg-blue-700 text-white rounded-md hover:bg-blue-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
-                    Vista Previa PNG
+                    PNG
                   </button>
                 </div>
 
                 {/* Export Buttons */}
                 <div className="mt-4">
                   <h3 className="text-md font-medium text-gray-700 mb-2 text-center">
-                    Exportar Plantilla
+                    Exportar
                   </h3>
                   <div className="flex justify-center space-x-3">
                     <button
                       onClick={() => generateTemplate("pdf")}
                       disabled={!allFieldsValid() || isGenerating}
-                      className="px-4 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                      className="px-4 py-1.5 bg-red-700 text-white rounded-md hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
                     >
-                      {isGenerating ? "Generando..." : "Exportar PDF"}
+                      {isGenerating ? "Generando..." : "PDF"}
                     </button>
                     <button
                       onClick={() => generateTemplate("png")}
                       disabled={!allFieldsValid() || isGenerating}
-                      className="px-4 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                      className="px-4 py-1.5 bg-blue-700 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
                     >
-                      {isGenerating ? "Generando..." : "Exportar PNG"}
+                      {isGenerating ? "Generando..." : "PNG"}
                     </button>
                     <button
                       onClick={handleAutopopulate}
-                      className="px-4 py-1.5 bg-purple-500 text-white rounded-md hover:bg-purple-600"
+                      className="px-4 py-1.5 bg-purple-700 text-white rounded-md hover:bg-purple-600"
                     >
                       Autocompletar
                     </button>

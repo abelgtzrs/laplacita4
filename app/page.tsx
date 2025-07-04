@@ -1,44 +1,44 @@
 /**
  * HOMEPAGE COMPONENT - LA PLACITA FTP
  * ===================================
- * 
+ *
  * Main landing page for La Placita FTP website featuring multiple sections:
- * 
+ *
  * 1. HERO SECTION
  *    - Image slideshow background with store photos
  *    - Welcome message and call-to-action buttons
  *    - Responsive design for all screen sizes
- * 
+ *
  * 2. FEATURED PRODUCTS & POPULAR FOOD
  *    - Dual-column layout showcasing products
  *    - Left: Non-food featured products
  *    - Right: Popular food items
  *    - Loading states with skeleton animations
- * 
+ *
  * 3. INTERACTIVE SERVICES SECTION
  *    - 6 service cards with hover/tap interactions
  *    - Partner logos revealed on interaction
  *    - Mobile-friendly expandable cards
- * 
+ *
  * 4. WHATSAPP PRINTING SERVICE
  *    - Dedicated promotion for printing services
  *    - Direct WhatsApp integration
- * 
+ *
  * 5. LOCATION MAP & FACEBOOK FEED
  *    - Google Maps integration for store location
  *    - Facebook page feed for social proof
- * 
+ *
  * 6. GOOGLE REVIEWS CAROUSEL
  *    - Customer testimonials and ratings
  *    - Carousel display for multiple reviews
- * 
+ *
  * 7. ABOUT SNIPPET
  *    - Brief company history and description
- * 
+ *
  * 8. CURRENT PROMOTIONS
  *    - Dynamic display of active promotions
  *    - Conditionally rendered based on available data
- * 
+ *
  * TECHNICAL FEATURES:
  * - Multi-language support via useLanguage context
  * - Responsive design with Tailwind CSS
@@ -105,27 +105,27 @@ export default function HomePage() {
   // ========================
   // STATE MANAGEMENT
   // ========================
-  
+
   /**
    * Language and translation context
    */
   const { t, language } = useLanguage();
-  
+
   /**
    * Featured products state - stores non-food featured products
    */
   const [featuredProducts, setFeaturedProducts] = useState([]);
-  
+
   /**
    * Popular food items state - stores featured food products
    */
   const [popularFood, setPopularFood] = useState([]);
-  
+
   /**
    * Current promotions state - stores active promotions
    */
   const [currentPromotions, setCurrentPromotions] = useState([]);
-  
+
   /**
    * Active service state - tracks which service card is expanded on mobile
    */
@@ -134,7 +134,7 @@ export default function HomePage() {
   // ======================
   // EVENT HANDLERS
   // ======================
-  
+
   /**
    * Handle service card click/tap
    * Toggles the expanded state of service cards on mobile devices
@@ -146,7 +146,7 @@ export default function HomePage() {
   // ======================
   // SERVICES CONFIGURATION
   // ======================
-  
+
   /**
    * Services array configuration
    * Defines all available services with their icons, descriptions, and partner logos
@@ -209,7 +209,7 @@ export default function HomePage() {
   // ======================
   // DATA FETCHING EFFECT
   // ======================
-  
+
   /**
    * Load data from API endpoints
    * Fetches featured products, promotions, and popular food items
@@ -251,10 +251,9 @@ export default function HomePage() {
   // ======================
   // COMPONENT RENDER
   // ======================
-  
+
   return (
     <div className="min-h-screen">
-      
       {/* ================================================ */}
       {/* HERO SECTION                                     */}
       {/* ================================================ */}
@@ -319,7 +318,6 @@ export default function HomePage() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-16">
-            
             {/* ========================================== */}
             {/* LEFT COLUMN: FEATURED PRODUCTS            */}
             {/* ========================================== */}
@@ -651,18 +649,6 @@ export default function HomePage() {
         - Shows customer feedback and ratings
         - Builds trust and social proof
       */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-fiesta font-bold text-gray-900 mb-4">
-              Lo Que Dice Nuestra Comunidad
-            </h2>
-            <div className="w-24 h-1 bg-gradient-to-r from-fiesta-yellow to-fiesta-orange mx-auto"></div>
-          </div>
-          {/* The Carousel itself */}
-          <GoogleReviewsCarousel />
-        </div>
-      </section>
 
       {/* ================================================ */}
       {/* ABOUT SNIPPET SECTION                          */}
