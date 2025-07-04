@@ -240,10 +240,8 @@ function MainComponent() {
       ctx.fillStyle = "#ffffff"; // Logo background
       ctx.strokeStyle = "#ffffff"; // Logo border
       ctx.lineWidth = 2; // Logo border width
-      ctx.strokeRect(60, 15, 70, 50); // Logo rectangle
       ctx.font = "12px Arial"; // Logo text font
       ctx.textAlign = "center"; // Center text
-      ctx.fillText("LOGO", 95, 42); // Draw logo text
 
       // --- Flag image sources for each country (replace with your own paths) ---
       const flagImages = {
@@ -306,12 +304,12 @@ function MainComponent() {
 
       // Draw date below header
       ctx.fillStyle = "#2c3e50"; // Date color
-      ctx.font = "18px Arial"; // Date font
-      ctx.fillText(getCurrentDate(), canvas.width / 2, headerHeight + 40); // Centered date
+      ctx.font = "bold 40px Arial"; // Date font
+      ctx.fillText(getCurrentDate(), canvas.width / 2, headerHeight + 60); // Centered date
 
       // Draw main title
-      ctx.font = "bold 38px Arial"; // Title font
-      ctx.fillText("TIPOS DE CAMBIO", canvas.width / 2, headerHeight + 80); // Centered title
+      ctx.font = "bold 50px Arial"; // Title font
+      ctx.fillText("TIPOS DE CAMBIO", canvas.width / 2, headerHeight + 140); // Centered title
 
       // --- Column Layout Setup ---
       const column1X = 15; // X position for left column (close to left edge)

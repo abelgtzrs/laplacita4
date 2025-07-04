@@ -28,7 +28,7 @@ export default function AdminLoginPage() {
       // Simple authentication check (in production, this would be more secure)
       if (
         credentials.username === "admin" &&
-        credentials.password === "laplacita2025"
+        credentials.password === "12345"
       ) {
         localStorage.setItem("adminAuth", "true");
         router.push("/admin/products");
