@@ -73,14 +73,16 @@ function MainComponent() {
   const [showPreview, setShowPreview] = React.useState(false);
   const [previewContent, setPreviewContent] = React.useState("");
   const [previewType, setPreviewType] = React.useState("");
-  const [savedLogs, setSavedLogs] = React.useState<Array<{
-    id: string;
-    date: string;
-    timestamp: string;
-    rates: Rates;
-    logoType: string;
-    selectedCountries: string[];
-  }>>([]);
+  const [savedLogs, setSavedLogs] = React.useState<
+    Array<{
+      id: string;
+      date: string;
+      timestamp: string;
+      rates: Rates;
+      logoType: string;
+      selectedCountries: string[];
+    }>
+  >([]);
   const [showLogs, setShowLogs] = React.useState(false);
 
   const countries: Countries = {
@@ -164,6 +166,85 @@ function MainComponent() {
       allBanks.every((bank) => rates[bank] && validateRate(rates[bank])) &&
       Object.keys(errors).length === 0
     );
+  };
+
+  // Load saved values on component mount
+  React.useEffect(() => {
+    const savedRates = localStorage.getItem("exchangeRates");
+    const savedLogoType = localStorage.getItem("exchangeLogoType");
+    const savedCountries = localStorage.getItem("exchangeSelectedCountries");
+    const logs = localStorage.getItem("exchangeRateLogs");
+
+    if (savedRates) {
+      try {
+        setRates(JSON.parse(savedRates));
+      } catch (error) {
+        console.error("Error loading saved rates:", error);
+      }
+    }
+
+    if (savedLogoType) {
+      setLogoType(savedLogoType);
+    }
+
+    if (savedCountries) {
+      try {
+        setSelectedCountries(JSON.parse(savedCountries));
+      } catch (error) {
+        console.error("Error loading saved countries:", error);
+      }
+    }
+
+    if (logs) {
+      try {
+        setSavedLogs(JSON.parse(logs));
+      } catch (error) {
+        console.error("Error loading logs:", error);
+      }
+    }
+  }, []);
+
+  const saveCurrentValues = () => {
+    const now = new Date();
+    const logEntry = {
+      id: now.getTime().toString(),
+      date: getCurrentDate(),
+      timestamp: now.toLocaleString("es-ES"),
+      rates: { ...rates },
+      logoType,
+      selectedCountries: [...selectedCountries],
+    };
+
+    // Save current values to localStorage
+    localStorage.setItem("exchangeRates", JSON.stringify(rates));
+    localStorage.setItem("exchangeLogoType", logoType);
+    localStorage.setItem(
+      "exchangeSelectedCountries",
+      JSON.stringify(selectedCountries)
+    );
+
+    // Add to logs
+    const updatedLogs = [logEntry, ...savedLogs].slice(0, 50); // Keep last 50 entries
+    setSavedLogs(updatedLogs);
+    localStorage.setItem("exchangeRateLogs", JSON.stringify(updatedLogs));
+
+    alert("Valores guardados exitosamente!");
+  };
+
+  const loadLogEntry = (logEntry: (typeof savedLogs)[0]) => {
+    setRates(logEntry.rates);
+    setLogoType(logEntry.logoType);
+    setSelectedCountries(logEntry.selectedCountries);
+    setErrors({});
+    alert(`Valores del ${logEntry.timestamp} cargados exitosamente!`);
+  };
+
+  const clearLogs = () => {
+    if (confirm("¿Estás seguro de que quieres borrar todos los registros?")) {
+      setSavedLogs([]);
+      localStorage.removeItem("exchangeRateLogs");
+      alert("Registros borrados exitosamente!");
+    }
   };
 
   const getCurrentDate = () => {
@@ -956,13 +1037,8 @@ function MainComponent() {
                     >
                       {isGenerating ? "Generando..." : "PNG"}
                     </button>
-                    <button
-                      onClick={handleAutopopulate}
-                      className="px-4 py-1.5 bg-purple-700 text-white rounded-md hover:bg-purple-600"
-                    >
-                      Autocompletar
-                    </button>
                   </div>
+
                   {!allFieldsValid() && (
                     <p className="text-yellow-600 text-xs mt-1 text-center">
                       {selectedCountries.length === 0
@@ -971,9 +1047,102 @@ function MainComponent() {
                     </p>
                   )}
                 </div>
+
+                {/* Management Buttons */}
+                <div className="mt-4">
+                  <h3 className="text-md font-medium text-gray-700 mb-2 text-center">
+                    Administración
+                  </h3>
+                  <div className="flex justify-center space-x-3">
+                    <button
+                      onClick={handleAutopopulate}
+                      className="px-4 py-1.5 bg-purple-700 text-white rounded-md hover:bg-purple-600"
+                    >
+                      Autocompletar
+                    </button>
+                    <button
+                      onClick={saveCurrentValues}
+                      className="px-4 py-1.5 bg-green-700 text-white rounded-md hover:bg-green-600"
+                    >
+                      Guardar Valores
+                    </button>
+                    <button
+                      onClick={() => setShowLogs(!showLogs)}
+                      className="px-4 py-1.5 bg-gray-700 text-white rounded-md hover:bg-gray-600"
+                    >
+                      {showLogs ? "Ocultar" : "Ver"} Historial
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+
+          {/* Logs Section */}
+          {showLogs && (
+            <div className="mt-6 bg-white rounded-lg shadow-lg p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-gray-800">
+                  Historial de Valores Guardados
+                </h2>
+                {savedLogs.length > 0 && (
+                  <button
+                    onClick={clearLogs}
+                    className="px-3 py-1 bg-red-600 text-white text-sm rounded-md hover:bg-red-700"
+                  >
+                    Borrar Historial
+                  </button>
+                )}
+              </div>
+
+              {savedLogs.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">
+                  No hay registros guardados aún.
+                </p>
+              ) : (
+                <div className="max-h-96 overflow-y-auto">
+                  <div className="space-y-3">
+                    {savedLogs.map((log) => (
+                      <div
+                        key={log.id}
+                        className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h3 className="font-medium text-gray-800">
+                              {log.timestamp}
+                            </h3>
+                            <p className="text-sm text-gray-600">
+                              Logo:{" "}
+                              {log.logoType === "intermex" ? "Intermex" : "RIA"}{" "}
+                              | Países: {log.selectedCountries.join(", ")}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => loadLogEntry(log)}
+                            className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
+                          >
+                            Cargar
+                          </button>
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                            {Object.entries(log.rates)
+                              .filter(([_, rate]) => rate)
+                              .map(([bank, rate]) => (
+                                <span key={bank} className="truncate">
+                                  {bank}: {rate}
+                                </span>
+                              ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
