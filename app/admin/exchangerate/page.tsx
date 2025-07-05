@@ -73,6 +73,15 @@ function MainComponent() {
   const [showPreview, setShowPreview] = React.useState(false);
   const [previewContent, setPreviewContent] = React.useState("");
   const [previewType, setPreviewType] = React.useState("");
+  const [savedLogs, setSavedLogs] = React.useState<Array<{
+    id: string;
+    date: string;
+    timestamp: string;
+    rates: Rates;
+    logoType: string;
+    selectedCountries: string[];
+  }>>([]);
+  const [showLogs, setShowLogs] = React.useState(false);
 
   const countries: Countries = {
     Mexico: {
