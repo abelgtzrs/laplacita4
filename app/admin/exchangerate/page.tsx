@@ -463,7 +463,7 @@ function MainComponent() {
                 min-height: 1100px;
                 margin: 0 auto;
                 background: white;
-                padding: 30px;
+                padding: 50px;
                 box-shadow: 0 0 20px rgba(0,0,0,0.1);
               }
               .header { 
@@ -485,6 +485,39 @@ function MainComponent() {
                 align-items: center;
                 justify-content: center;
                 font-size: 12px;
+                font-weight: bold;
+              }
+              .qr-section {
+                position: absolute;
+                top: 30px;
+                left: 60px;
+                width: 200px;
+                text-align: center;
+                background: rgba(255, 255, 255, 0.95);
+                padding: 15px;
+                border-radius: 8px;
+              }
+              .qr-placeholder {
+                width: 100px;
+                height: 100px;
+                background: #f8f9fa;
+                border: 2px dashed #666;
+                margin: 0 auto 20px auto;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 12px;
+                font-weight: bold;
+                color: #666;
+              }
+              .qr-text {
+                font-size: 12px;
+                color: #2c3e50;
+                font-weight: bold;
+                line-height: 1.3;
+              }
+              .facebook-text {
+                color: #3498db;
                 font-weight: bold;
               }
               .company-name { 
@@ -611,8 +644,8 @@ function MainComponent() {
                 <div class="logo-placeholder">LOGO</div>
                 <div class="company-name">${
                   logoType === "intermex"
-                    ? `<img src="${window.location.origin}/logos/intermex.png" alt="INTERMEX" style="height: 180px;" />`
-                    : `<img src="${window.location.origin}/logos/ria.png" alt="RIA" style="height: 180px;" />`
+                    ? `<img src="${window.location.origin}/logos/intermex.png" alt="INTERMEX" style="height: 120px;" />`
+                    : `<img src="${window.location.origin}/logos/ria.png" alt="RIA" style="height: 120px;" />`
                 }</div>
               </div>
               
@@ -622,114 +655,46 @@ function MainComponent() {
               </div>
               
               <div class="rates-container">
-                <!-- Mexico Section (Left Column) -->
-                <div class="country-section mexico-section">
-                  <div class="country-header">
-                    <div class="flag-placeholder"><img src="/flags/mexico.png"></div>
-                    <div class="country-name">MEXICO (USD → MXN)</div>
-                  </div>
-                  <div class="bank-list">
-                    ${countries.Mexico.banks
-                      .map(
-                        (bank) => `
-                      <div class="bank-row">
-                        <div class="bank-info">
-                          <div class="bank-name">${bank}</div>
-                        </div>
-                        <div class="rate">${rates[bank]} MXN</div>
+                ${selectedCountries
+                  .map((countryName) => {
+                    const countryData = countries[countryName];
+                    if (!countryData) return "";
+
+                    return `
+                    <div class="country-section ${
+                      countryName === "Mexico" ? "mexico-section" : ""
+                    }">
+                      <div class="country-header">
+                        <div class="flag-placeholder"><img src="/flags/${countryName.toLowerCase()}.png"></div>
+                        <div class="country-name">${countryName.toUpperCase()} (USD → ${
+                      countryData.currency
+                    })</div>
                       </div>
-                    `
-                      )
-                      .join("")}
-                  </div>
-                </div>
-                
-                <!-- Honduras Section (Right Column Top) -->
-                <div class="country-section">
-                  <div class="country-header">
-                    <div class="flag-placeholder"><img src="/flags/honduras.png"></div>
-                    <div class="country-name">HONDURAS (USD → HNL)</div>
-                  </div>
-                  <div class="bank-list">
-                    ${countries.Honduras.banks
-                      .map(
-                        (bank) => `
-                      <div class="bank-row">
-                        <div class="bank-info">
-                          <div class="bank-name">${bank}</div>
-                        </div>
-                        <div class="rate">${rates[bank]} HNL</div>
+                      <div class="bank-list">
+                        ${countryData.banks
+                          .map(
+                            (bank) => `
+                          <div class="bank-row">
+                            <div class="bank-info">
+                              <div class="bank-name">${bank}</div>
+                            </div>
+                            <div class="rate">${rates[bank]} ${countryData.currency}</div>
+                          </div>
+                        `
+                          )
+                          .join("")}
                       </div>
-                    `
-                      )
-                      .join("")}
-                  </div>
-                </div>
-                
-                <!-- Guatemala Section (Right Column Bottom) -->
-                <div class="country-section">
-                  <div class="country-header">
-                    <div class="flag-placeholder"><img src="/flags/guatemala.png"></div>
-                    <div class="country-name">GUATEMALA (USD → GTQ)</div>
-                  </div>
-                  <div class="bank-list">
-                    ${countries.Guatemala.banks
-                      .map(
-                        (bank) => `
-                      <div class="bank-row">
-                        <div class="bank-info">
-                          <div class="bank-name">${bank}</div>
-                        </div>
-                        <div class="rate">${rates[bank]} GTQ</div>
-                      </div>
-                    `
-                      )
-                      .join("")}
-                  </div>
-                </div>
-                
-                <!-- Colombia Section (Right Column Top) -->
-                <div class="country-section">
-                  <div class="country-header">
-                    <div class="flag-placeholder"><img src="/flags/colombia.png"></div>
-                    <div class="country-name">COLOMBIA (USD → COP)</div>
-                  </div>
-                  <div class="bank-list">
-                    ${countries.Colombia.banks
-                      .map(
-                        (bank) => `
-                      <div class="bank-row">
-                        <div class="bank-info">
-                          <div class="bank-name">${bank}</div>
-                        </div>
-                        <div class="rate">${rates[bank]} COP</div>
-                      </div>
-                    `
-                      )
-                      .join("")}
-                  </div>
-                </div>
-                
-                <!-- Haiti Section (Right Column Bottom) -->
-                <div class="country-section">
-                  <div class="country-header">
-                    <div class="flag-placeholder"><img src="/flags/haiti.png"></div>
-                    <div class="country-name">HAITI (USD → HTG)</div>
-                  </div>
-                  <div class="bank-list">
-                    ${countries.Haiti.banks
-                      .map(
-                        (bank) => `
-                      <div class="bank-row">
-                        <div class="bank-info">
-                          <div class="bank-name">${bank}</div>
-                        </div>
-                        <div class="rate">${rates[bank]} HTG</div>
-                      </div>
-                    `
-                      )
-                      .join("")}
-                  </div>
+                    </div>
+                    `;
+                  })
+                  .join("")}
+              </div>
+              
+              <!-- QR Code Section -->
+              <div class="qr-section">
+                <div class="qr-placeholder"><img src="/qrcode.png"/></div>
+                <div class="qr-text">
+                  ¡Escanea y síguenos en <span class="facebook-text">Facebook</span> para actualizaciones diarias del tipo de cambio!
                 </div>
               </div>
             </div>
