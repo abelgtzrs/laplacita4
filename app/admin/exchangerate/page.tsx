@@ -32,7 +32,7 @@ function ExchangeRatePage() {
 function MainComponent() {
   const [rates, setRates] = React.useState<Rates>({
     // Mexico banks (USD to MXN)
-    "Banco Azteca MX": "",
+    "Elektra / Banco Azteca": "",
     Bancoppel: "",
     Bancomer: "",
     Banorte: "",
@@ -90,7 +90,7 @@ function MainComponent() {
       currency: "MXN",
       flag: "🇲🇽",
       banks: [
-        "Banco Azteca MX",
+        "Elektra / Banco Azteca",
         "Bancoppel",
         "Bancomer",
         "Banorte",
