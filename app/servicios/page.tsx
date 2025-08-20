@@ -280,11 +280,11 @@ export default function ServicesPage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <div className="flex items-center justify-center space-x-2 text-green-600">
                   <span className="font-semibold">
-                    📍 123 Main Street, Fort Pierce, FL
+                    📍 1508 Delaware Ave, Fort Pierce, FL
                   </span>
                 </div>
                 <div className="flex items-center justify-center space-x-2 text-green-600">
-                  <span className="font-semibold">📞 (772) 123-4567</span>
+                  <span className="font-semibold">📞 (772) 242-1416</span>
                 </div>
               </div>
             </CardContent>
