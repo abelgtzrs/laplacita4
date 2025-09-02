@@ -138,15 +138,14 @@ export default function ContactPage() {
             {/* Map */}
             <Card>
               <CardContent className="p-0">
-                <div className="aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
-                  <div className="text-center text-gray-500">
-                    <MapPin className="h-12 w-12 mx-auto mb-2" />
-                    <p>Mapa Interactivo</p>
-                    <p className="text-sm">
-                      1508 Delaware Ave, Fort Pierce, FL
-                    </p>
-                  </div>
-                </div>
+            <div className="aspect-w-16 aspect-h-9 bg-gray-200 rounded-lg overflow-hidden shadow-xl">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3540.816216717518!2d-80.3419831237173!3d27.443837776334753!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x88def194f69636f3%3A0x3b810b158ab0f8dc!2sLa%20Placita%20FTP!5e0!3m2!1sen!2sus!4v1749439130255!5m2!1sen!2sus"
+                width="600"
+                height="576"
+                loading="lazy"
+              ></iframe>
+            </div>
               </CardContent>
             </Card>
           </div>
