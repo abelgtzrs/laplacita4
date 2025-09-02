@@ -323,6 +323,10 @@ function MainComponent() {
         return;
       }
 
+  // Ensure white background instead of transparent (important for PNG export)
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
       // Draw header bar
       ctx.fillStyle = logoType === "intermex" ? "#e74c3c" : "#3498db"; // Header color based on logo
 
