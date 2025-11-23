@@ -1,26 +1,31 @@
 "use client";
 import React from "react";
 import { AdminLayout } from "@/components/admin-layout";
+import {
+  RateErrors,
+  Rates,
+  LogEntry,
+} from "./types";
+import {
+  COUNTRIES,
+  INITIAL_RATES,
+  INITIAL_SELECTED_COUNTRIES,
+  FLAG_IMAGES,
+} from "./constants";
+import {
+  validateRate,
+  getCurrentDate,
+  generateRandomRate,
+} from "./utils";
+import { preloadImages } from "./image-utils";
 
-// Type definitions
-type RateErrors = {
-  [key: string]: string;
-};
-
-type Rates = {
-  [key: string]: string;
-};
-
-type CountryData = {
-  currency: string;
-  flag: string;
-  banks: string[];
-};
-
-type Countries = {
-  [key: string]: CountryData;
-};
-
+/**
+ * ExchangeRatePage Component
+ * 
+ * DEVELOPER NOTES:
+ * This is the main container for the Exchange Rate admin interface.
+ * It wraps the MainComponent in the AdminLayout.
+ */
 function ExchangeRatePage() {
   return (
     <AdminLayout>
@@ -29,146 +34,53 @@ function ExchangeRatePage() {
   );
 }
 
+/**
+ * MainComponent
+ * 
+ * DEVELOPER NOTES:
+ * This component handles all the logic for the Exchange Rate feature.
+ * 
+ * Key Responsibilities:
+ * 1. State Management:
+ *    - rates: Stores the current input values for all banks.
+ *    - errors: Stores validation error messages.
+ *    - logoType: Toggles between "intermex" and "ria".
+ *    - selectedCountries: Controls which countries are displayed/exported.
+ *    - savedLogs: History of saved configurations.
+ * 
+ * 2. Persistence:
+ *    - Uses localStorage to persist state between reloads.
+ *    - Keys: "exchangeRates", "exchangeLogoType", "exchangeSelectedCountries", "exchangeRateLogs".
+ * 
+ * 3. Export Generation:
+ *    - Generates PNGs using HTML5 Canvas (detailed logic in generateTemplate).
+ *    - Generates PDFs by opening a new window with styled HTML and calling window.print().
+ */
 function MainComponent() {
-  const [rates, setRates] = React.useState<Rates>({
-    // Mexico banks (USD to MXN)
-    "Elektra / Banco Azteca": "",
-    Bancoppel: "",
-    Bancomer: "",
-    Banorte: "",
-    "Pago Express": "",
-    Soriana: "",
-    Walmart: "",
-    OXXO: "",
-    // Honduras banks (USD to HNL)
-    "Banco Atlántida": "",
-    "Banco de Occidente": "",
-    "Banrural Honduras": "",
-    "Banco Azteca HN": "",
-    // Guatemala banks (USD to GTQ)
-    Banrural: "",
-    "Banco Industrial": "",
-    "Banco Azteca GT": "",
-    "Banco G&T Continental": "",
-    // Colombia banks (USD to COP)
-    Bancolombia: "",
-    "Grupo Éxito": "",
-    "Banco Davivienda": "",
-    // Haiti banks (USD to HTG)
-    Unibank: "",
-    Sogebank: "",
-    "Capital Bank": "",
-  });
-
+  // --- State Initialization ---
+  const [rates, setRates] = React.useState<Rates>(INITIAL_RATES);
   const [errors, setErrors] = React.useState<RateErrors>({});
   const [logoType, setLogoType] = React.useState("intermex");
   const [isGenerating, setIsGenerating] = React.useState(false);
-  const [selectedCountries, setSelectedCountries] = React.useState([
-    "Mexico",
-    "Honduras",
-    "Guatemala",
-    "Colombia",
-    "Haiti",
-  ]);
+  const [selectedCountries, setSelectedCountries] = React.useState(
+    INITIAL_SELECTED_COUNTRIES
+  );
+  
+  // Preview State
   const [showPreview, setShowPreview] = React.useState(false);
   const [previewContent, setPreviewContent] = React.useState("");
   const [previewType, setPreviewType] = React.useState("");
-  const [savedLogs, setSavedLogs] = React.useState<
-    Array<{
-      id: string;
-      date: string;
-      timestamp: string;
-      rates: Rates;
-      logoType: string;
-      selectedCountries: string[];
-    }>
-  >([]);
+  
+  // Logs State
+  const [savedLogs, setSavedLogs] = React.useState<LogEntry[]>([]);
   const [showLogs, setShowLogs] = React.useState(false);
 
-  const countries: Countries = {
-    Mexico: {
-      currency: "MXN",
-      flag: "🇲🇽",
-      banks: [
-        "Elektra / Banco Azteca",
-        "Bancoppel",
-        "Bancomer",
-        "Banorte",
-        "Pago Express",
-        "Soriana",
-        "Walmart",
-        "Bodega Aurrerá",
-        "Farmacias Guadalajara",
-        "OXXO",
-      ],
-    },
-    Honduras: {
-      currency: "HNL",
-      flag: "🇭🇳",
-      banks: [
-        "Banco Atlántida",
-        "Banco de Occidente",
-        "Banrural Honduras",
-        "Banco Azteca HN",
-      ],
-    },
-    Guatemala: {
-      currency: "GTQ",
-      flag: "🇬🇹",
-      banks: [
-        "Banrural",
-        "Banco Industrial",
-        "Banco Azteca GT",
-        "Banco G&T Continental",
-      ],
-    },
-    Colombia: {
-      currency: "COP",
-      flag: "🇨🇴",
-      banks: ["Bancolombia", "Grupo Éxito", "Banco Davivienda"],
-    },
-    Haiti: {
-      currency: "HTG",
-      flag: "🇭🇹",
-      banks: ["Unibank", "Sogebank", "Capital Bank"],
-    },
-  };
+  // --- Effects ---
 
-  const validateRate = (value: string) => {
-    if (!value) return false;
-    const num = parseFloat(value);
-    if (isNaN(num) || num <= 0) return false;
-    // Check if it has at most 2 decimal places
-    const decimalPart = value.split(".")[1];
-    return !decimalPart || decimalPart.length <= 2;
-  };
-
-  const handleRateChange = (bank: string, value: string) => {
-    setRates((prev) => ({ ...prev, [bank]: value }));
-
-    if (value && !validateRate(value)) {
-      setErrors((prev) => ({
-        ...prev,
-        [bank]: "Debe ser un número válido con hasta 2 decimales",
-      }));
-    } else {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[bank];
-        return newErrors;
-      });
-    }
-  };
-
-  const allFieldsValid = () => {
-    const allBanks = Object.keys(rates);
-    return (
-      allBanks.every((bank) => rates[bank] && validateRate(rates[bank])) &&
-      Object.keys(errors).length === 0
-    );
-  };
-
-  // Load saved values on component mount
+  /**
+   * Load saved values from localStorage on component mount.
+   * This ensures the user doesn't lose their work if they refresh the page.
+   */
   React.useEffect(() => {
     const savedRates = localStorage.getItem("exchangeRates");
     const savedLogoType = localStorage.getItem("exchangeLogoType");
@@ -204,9 +116,58 @@ function MainComponent() {
     }
   }, []);
 
+  // --- Handlers ---
+
+  /**
+   * Handles changes to rate inputs.
+   * Performs real-time validation.
+   */
+  const handleRateChange = (bank: string, value: string) => {
+    setRates((prev) => ({ ...prev, [bank]: value }));
+
+    if (value && !validateRate(value)) {
+      setErrors((prev) => ({
+        ...prev,
+        [bank]: "Debe ser un número válido con hasta 2 decimales",
+      }));
+    } else {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[bank];
+        return newErrors;
+      });
+    }
+  };
+
+  /**
+   * Checks if all fields for the *selected* countries are valid.
+   * Used to enable/disable export buttons.
+   */
+  const allFieldsValid = () => {
+    // Only check banks belonging to selected countries
+    const activeBanks: string[] = [];
+    selectedCountries.forEach(country => {
+      const countryData = COUNTRIES[country];
+      if (countryData) {
+        activeBanks.push(...countryData.banks);
+      }
+    });
+
+    // Check if all active banks have a value and are valid
+    const allRatesValid = activeBanks.every(bank => {
+      const rate = rates[bank];
+      return rate && validateRate(rate);
+    });
+
+    return allRatesValid && Object.keys(errors).length === 0;
+  };
+
+  /**
+   * Saves the current state to localStorage and adds an entry to the logs.
+   */
   const saveCurrentValues = () => {
     const now = new Date();
-    const logEntry = {
+    const logEntry: LogEntry = {
       id: now.getTime().toString(),
       date: getCurrentDate(),
       timestamp: now.toLocaleString("es-ES"),
@@ -223,15 +184,18 @@ function MainComponent() {
       JSON.stringify(selectedCountries)
     );
 
-    // Add to logs
-    const updatedLogs = [logEntry, ...savedLogs].slice(0, 50); // Keep last 50 entries
+    // Add to logs (keep last 50)
+    const updatedLogs = [logEntry, ...savedLogs].slice(0, 50);
     setSavedLogs(updatedLogs);
     localStorage.setItem("exchangeRateLogs", JSON.stringify(updatedLogs));
 
     alert("Valores guardados exitosamente!");
   };
 
-  const loadLogEntry = (logEntry: (typeof savedLogs)[0]) => {
+  /**
+   * Restores a previous state from the logs.
+   */
+  const loadLogEntry = (logEntry: LogEntry) => {
     setRates(logEntry.rates);
     setLogoType(logEntry.logoType);
     setSelectedCountries(logEntry.selectedCountries);
@@ -247,56 +211,25 @@ function MainComponent() {
     }
   };
 
-  const getCurrentDate = () => {
-    return new Date().toLocaleDateString("es-ES", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  // Helper to preload flag images and store logo
-  async function preloadImages(
-    flagImages: { [key: string]: string },
-    selectedCountries: string[],
-    storeLogoPath: string,
-    cornerLogoPath: string
-  ) {
-    const flagPromises = selectedCountries.map(
-      (country) =>
-        new Promise((resolve) => {
-          const img = new window.Image();
-          img.src = flagImages[country] || "";
-          img.onload = () => resolve({ country, img });
-          img.onerror = () => resolve({ country, img: null });
-        })
-    );
-    // Preload store logo (header)
-    const storeLogoPromise = new Promise((resolve) => {
-      const img = new window.Image();
-      img.src = storeLogoPath;
-      img.onload = () => resolve(img);
-      img.onerror = () => resolve(null);
-    });
-    // Preload corner logo
-    const cornerLogoPromise = new Promise((resolve) => {
-      const img = new window.Image();
-      img.src = cornerLogoPath;
-      img.onload = () => resolve(img);
-      img.onerror = () => resolve(null);
-    });
-    const flagResults = await Promise.all(flagPromises);
-    const storeLogoImg = (await storeLogoPromise) as HTMLImageElement | null;
-    const cornerLogoImg = (await cornerLogoPromise) as HTMLImageElement | null;
-    return {
-      flagMap: Object.fromEntries(
-        flagResults.map(({ country, img }: any) => [country, img])
-      ),
-      storeLogoImg,
-      cornerLogoImg,
-    };
-  }
-
+  /**
+   * Generates the export template (PNG or PDF).
+   * 
+   * DEVELOPER NOTES:
+   * This is the core "business logic" of this page.
+   * 
+   * PNG Generation:
+   * - Creates an HTML5 Canvas.
+   * - Draws the background, headers, logos, and text manually.
+   * - Calculates layout positions dynamically based on selected countries.
+   * - Handles column balancing (splitting countries into two columns).
+   * - Exports the canvas as a data URL.
+   * 
+   * PDF Generation:
+   * - Opens a new browser window.
+   * - Writes a full HTML document with inline CSS into that window.
+   * - Calls window.print() to trigger the browser's print dialog.
+   * - Automatically closes the window after printing.
+   */
   const generateTemplate = async (format: "png" | "pdf", preview = false) => {
     if (!allFieldsValid()) return;
 
@@ -304,218 +237,247 @@ function MainComponent() {
     let generatedContent = "";
 
     if (format === "png") {
-      // Create a canvas for the PNG template (Portrait orientation)
+      // Create a canvas for the PNG template (Portrait 4:5 ratio for Social Media)
       const canvas = document.createElement("canvas");
-
-      // --- PNG Export Drawing Logic with Comments ---
-
-      // Set up dimensions
-      const headerHeight = 150; // Height of the header/logo bar
-      const canvasHeight = 1300; // Height of the PNG
-      const canvasWidth = Math.round(canvasHeight * 1.3); // Proportional width (e.g., 1.3:1 ratio)
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
-
-      // Get the 2D drawing context
       const ctx = canvas.getContext("2d");
       if (!ctx) {
         setIsGenerating(false);
         return;
       }
 
-  // Ensure white background instead of transparent (important for PNG export)
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // --- Dimensions (1080x1350 - Instagram Portrait) ---
+      canvas.width = 1080;
+      canvas.height = 1350;
+      const W = canvas.width;
+      const H = canvas.height;
 
-      // Draw header bar
-      ctx.fillStyle = logoType === "intermex" ? "#e74c3c" : "#3498db"; // Header color based on logo
-
-      // Draw logo placeholder (rectangle + text)
-      ctx.fillStyle = "#ffffff"; // Logo background
-      ctx.strokeStyle = "#ffffff"; // Logo border
-      ctx.lineWidth = 2; // Logo border width
-      ctx.font = "12px Arial"; // Logo text font
-      ctx.textAlign = "center"; // Center text
-
-      // --- Flag image sources for each country (replace with your own paths) ---
-      const flagImages = {
-        Mexico: "/flags/mexico.png",
-        Honduras: "/flags/honduras.png",
-        Guatemala: "/flags/guatemala.png",
-        Colombia: "/flags/colombia.png",
-        Haiti: "/flags/haiti.png",
+      // --- Design Configuration ---
+      const colors = {
+        primary: logoType === "intermex" ? "#e74c3c" : "#f39c12", // Red or Orange
+        primaryDark: logoType === "intermex" ? "#c0392b" : "#d35400",
+        backgroundTop: "#ffffff",
+        backgroundBottom: "#f0f2f5",
+        textMain: "#2c3e50",
+        textLight: "#7f8c8d",
+        cardBg: "rgba(255, 255, 255, 0.95)",
+        cardShadow: "rgba(0, 0, 0, 0.1)",
+        accent: "#27ae60", // Green for rates
       };
-      // Dynamically set the store logo path based on logoType
+
+      // --- 1. Background ---
+      // Create a subtle gradient background
+      const bgGradient = ctx.createLinearGradient(0, 0, 0, H);
+      bgGradient.addColorStop(0, colors.backgroundTop);
+      bgGradient.addColorStop(1, colors.backgroundBottom);
+      ctx.fillStyle = bgGradient;
+      ctx.fillRect(0, 0, W, H);
+
+      // Add a decorative top curve/shape
+      ctx.fillStyle = colors.primary;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(W, 0);
+      ctx.lineTo(W, 250);
+      ctx.bezierCurveTo(W, 250, W / 2, 350, 0, 250);
+      ctx.closePath();
+      ctx.fill();
+
+      // --- Assets Preloading ---
       const storeLogoPath =
         logoType === "intermex" ? "/logos/intermex.png" : "/logos/ria.png";
-      const cornerLogoPath = "/storelogo.png"; // Path to your actual store logo (corner)
+      const cornerLogoPath = "/storelogo.png";
 
-      // Preload all flag images, store logo, and corner logo before drawing
       const { flagMap, storeLogoImg, cornerLogoImg } = await preloadImages(
-        flagImages,
+        FLAG_IMAGES,
         selectedCountries,
         storeLogoPath,
         cornerLogoPath
       );
 
-      // --- Draw store logo image in header (centered, preserve aspect ratio) ---
-      const logoHeight = headerHeight;
-      if (
-        storeLogoImg &&
-        storeLogoImg.naturalWidth &&
-        storeLogoImg.naturalHeight
-      ) {
-        // Calculate width to preserve aspect ratio
-        const aspectRatio =
-          storeLogoImg.naturalWidth / storeLogoImg.naturalHeight;
-        const logoWidth = logoHeight * aspectRatio;
-        ctx.drawImage(
-          storeLogoImg,
-          canvas.width / 2 - logoWidth / 2,
-          0,
-          logoWidth,
-          logoHeight
-        ); // Centered, preserves aspect ratio
-      } else {
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(
-          canvas.width / 2 - logoHeight / 2,
-          0,
-          logoHeight,
-          logoHeight
-        );
+      // --- 2. Header Section ---
+      
+      // Store Logo (Centered Top)
+      if (storeLogoImg) {
+        const logoH = 120;
+        const aspectRatio = storeLogoImg.naturalWidth / storeLogoImg.naturalHeight;
+        const logoW = logoH * aspectRatio;
+        
+        // Draw with a white glow/shadow for better visibility on color
+        ctx.shadowColor = "rgba(0,0,0,0.2)";
+        ctx.shadowBlur = 15;
+        ctx.drawImage(storeLogoImg, (W - logoW) / 2, 40, logoW, logoH);
+        ctx.shadowBlur = 0; // Reset shadow
       }
 
-      // --- Draw actual store logo in the top-left corner ---
-      if (
-        cornerLogoImg &&
-        cornerLogoImg.naturalWidth &&
-        cornerLogoImg.naturalHeight
-      ) {
-        // Draw at 120x120px, 30px from top and left
-        ctx.drawImage(cornerLogoImg, 30, 0, 250, 250);
+      // Corner Logo (Top Left - Larger branding)
+      if (cornerLogoImg) {
+        // Draw larger at top left
+        ctx.drawImage(cornerLogoImg, 30, 30, 250, 250);
       }
 
-      // Draw date below header
-      ctx.fillStyle = "#2c3e50"; // Date color
-      ctx.font = "bold 40px Arial"; // Date font
-      ctx.fillText(getCurrentDate(), canvas.width / 2, headerHeight + 60); // Centered date
+      // Title & Date
+      ctx.textAlign = "center";
+      
+      // "Tipos de Cambio"
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 60px 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+      ctx.shadowColor = "rgba(0,0,0,0.3)";
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetY = 2;
+      ctx.fillText("TIPOS DE CAMBIO", W / 2, 220);
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
 
-      // Draw main title
-      ctx.font = "bold 50px Arial"; // Title font
-      ctx.fillText("TIPOS DE CAMBIO", canvas.width / 2, headerHeight + 140); // Centered title
+      // Date Badge
+      const dateText = getCurrentDate();
+      ctx.font = "bold 28px 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+      const dateWidth = ctx.measureText(dateText).width + 60;
+      
+      // Date background pill
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.roundRect((W - dateWidth) / 2, 260, dateWidth, 50, 25);
+      ctx.fill();
+      
+      // Date text
+      ctx.fillStyle = colors.primaryDark;
+      ctx.fillText(dateText, W / 2, 295);
 
-      // --- Column Layout Setup ---
-      const column1X = 15; // X position for left column (close to left edge)
-      const column2X = canvas.width / 2 + 50; // X position for right column (with right margin)
-      let currentY1 = headerHeight + 100; // Starting Y for left column (pushed down)
-      let currentY2 = headerHeight + 100; // Starting Y for right column (pushed down)
-      const lineHeight = 18; // Height for each bank row
-      const sectionSpacing = 30; // Space between country sections
+      // --- 3. Content Grid (Countries) ---
+      const startY = 360;
+      const cardGap = 30;
+      const colWidth = 480; // (1080 - 3*30) / 2 approx
+      const col1X = 40;
+      const col2X = W - 40 - colWidth;
+      
+      let leftColY = startY;
+      let rightColY = startY;
 
-      // --- Country Distribution Logic ---
-      let countriesForColumns = [...selectedCountries]; // Copy selected countries
-      // Swap Honduras and Guatemala if both are present
+      // Distribute countries logic (same as before but cleaner)
+      let countriesForColumns = [...selectedCountries];
       const idxHonduras = countriesForColumns.indexOf("Honduras");
       const idxGuatemala = countriesForColumns.indexOf("Guatemala");
       if (idxHonduras !== -1 && idxGuatemala !== -1) {
         [countriesForColumns[idxHonduras], countriesForColumns[idxGuatemala]] =
           [countriesForColumns[idxGuatemala], countriesForColumns[idxHonduras]];
       }
-      const countriesInColumns: string[][] = [[], []]; // [leftColumn, rightColumn]
+      
+      const countriesInColumns: string[][] = [[], []];
       countriesForColumns.forEach((country, index) => {
-        countriesInColumns[index % 2].push(country); // Alternate countries between columns
+        countriesInColumns[index % 2].push(country);
       });
-      // Ensure Haiti is always in the right column
+      // Force Haiti right
       const leftIdx = countriesInColumns[0].indexOf("Haiti");
       if (leftIdx !== -1) {
-        countriesInColumns[0].splice(leftIdx, 1); // Remove from left
-        countriesInColumns[1].push("Haiti"); // Add to right
+        countriesInColumns[0].splice(leftIdx, 1);
+        countriesInColumns[1].push("Haiti");
       }
 
-      // --- Draw Each Column ---
-      countriesInColumns.forEach((columnCountries, columnIndex) => {
-        let currentY = columnIndex === 0 ? currentY1 : currentY2; // Track Y for each column
-        const columnX = columnIndex === 0 ? column1X : column2X; // X for this column
+      // Helper to draw a country card
+      const drawCountryCard = (countryName: string, x: number, y: number): number => {
+        const data = COUNTRIES[countryName];
+        if (!data) return y;
 
-        columnCountries.forEach((countryName) => {
-          const countryData = countries[countryName]; // Get country data
-          if (!countryData) return; // Skip if not found
+        const bankCount = data.banks.length;
+        const headerH = 70;
+        const rowH = 55;
+        const padding = 15;
+        const cardHeight = headerH + (bankCount * rowH) + padding;
 
-          // Add top padding before country section
-          currentY += 100;
+        // Card Shadow & Background
+        ctx.shadowColor = colors.cardShadow;
+        ctx.shadowBlur = 15;
+        ctx.shadowOffsetY = 5;
+        ctx.fillStyle = colors.cardBg;
+        
+        ctx.beginPath();
+        ctx.roundRect(x, y, colWidth, cardHeight, 20);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
 
-          // --- Draw flag image (or placeholder if not loaded) ---
-          const flagImg = flagMap[countryName];
-          if (flagImg) {
-            ctx.drawImage(flagImg, columnX, currentY, 50, 30); // Draw flag image 50x30px
-          } else {
-            ctx.fillStyle = "#28a745"; // Placeholder background
-            ctx.fillRect(columnX, currentY, 50, 30); // Placeholder rectangle
-            ctx.fillStyle = "#ffffff";
-            ctx.font = "16px Arial";
-            ctx.textAlign = "center";
-            ctx.fillText("FLAG", columnX + 25, currentY + 20); // Placeholder text
-          }
+        // Country Header (Flag + Name)
+        const flagImg = flagMap[countryName];
+        if (flagImg) {
+          // Circular flag mask
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(x + 50, y + 35, 20, 0, Math.PI * 2);
+          ctx.closePath();
+          ctx.clip();
+          ctx.drawImage(flagImg, x + 30, y + 15, 40, 40); // Draw slightly larger to cover
+          ctx.restore();
+        }
 
-          // Draw country title
-          ctx.fillStyle = "#2c3e50"; // Title color
-          ctx.font = "bold 30px Arial"; // Country title font (large)
-          ctx.textAlign = "left"; // Left align
-          ctx.fillText(
-            `${countryName.toUpperCase()} (USD → ${countryData.currency})`, // Title text
-            columnX + 60, // X position after flag image
-            currentY + 24 // Y position aligned with flag
-          );
-          currentY += 55; // Space after country title
+        // Country Name
+        ctx.textAlign = "left";
+        ctx.fillStyle = colors.textMain;
+        ctx.font = "bold 28px 'Segoe UI', Roboto, sans-serif";
+        ctx.fillText(countryName.toUpperCase(), x + 85, y + 45);
+        
+        // Currency Code (Small pill)
+        ctx.font = "bold 14px 'Segoe UI', Roboto, sans-serif";
+        ctx.fillStyle = "#ecf0f1";
+        ctx.beginPath();
+        ctx.roundRect(x + colWidth - 70, y + 25, 50, 24, 12);
+        ctx.fill();
+        ctx.fillStyle = "#7f8c8d";
+        ctx.textAlign = "center";
+        ctx.fillText(data.currency, x + colWidth - 45, y + 42);
 
-          // --- Draw Each Bank Row ---
-          countryData.banks.forEach((bank) => {
-            currentY += 10; // Padding above each bank row
-            // Removed bank logo placeholder
+        // Divider
+        ctx.strokeStyle = "#ecf0f1";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x + 20, y + 70);
+        ctx.lineTo(x + colWidth - 20, y + 70);
+        ctx.stroke();
 
-            // Draw bank name (prominent)
-            ctx.fillStyle = "#2c3e50"; // Bank name color
-            ctx.font = "bold 28px Arial"; // Bank name font
-            ctx.textAlign = "left"; // Left align
-            ctx.fillText(`${bank}:`, columnX + 10, currentY + 8); // Shifted bank name left
+        // Bank Rows
+        let rowY = y + headerH + 35; // Start of first row text baseline
+        ctx.textAlign = "left";
+        
+        data.banks.forEach((bank) => {
+          // Bank Name
+          ctx.fillStyle = "#34495e";
+          ctx.font = "600 22px 'Segoe UI', Roboto, sans-serif";
+          ctx.fillText(bank, x + 25, rowY);
 
-            // Draw exchange rate (most prominent)
-            ctx.fillStyle = "#27ae60"; // Rate color
-            ctx.font = "bold 26px Arial"; // Rate font
-            ctx.textAlign = "right"; // Right align
-            ctx.fillText(
-              `${rates[bank]} ${countryData.currency}`,
-              columnX + canvas.width / 2 - 100, // Shifted rate left
-              currentY + 8 // Y position
-            );
-            currentY += 40; // Space after each bank row
-          });
-
-          currentY += 24; // Bottom padding after country section
+          // Rate (Highlighted)
+          const rateVal = rates[bank] || "---";
+          ctx.textAlign = "right";
+          ctx.fillStyle = colors.accent;
+          ctx.font = "bold 32px 'Segoe UI', Roboto, sans-serif";
+          ctx.fillText(rateVal, x + colWidth - 25, rowY);
+          
+          // Reset for next row
+          ctx.textAlign = "left";
+          rowY += rowH;
         });
 
-        // Update Y tracker for this column
-        if (columnIndex === 0) {
-          currentY1 = currentY;
-        } else {
-          currentY2 = currentY;
-        }
+        return y + cardHeight + cardGap;
+      };
+
+      // Draw Columns
+      countriesInColumns[0].forEach(country => {
+        leftColY = drawCountryCard(country, col1X, leftColY);
+      });
+      countriesInColumns[1].forEach(country => {
+        rightColY = drawCountryCard(country, col2X, rightColY);
       });
 
-      // --- Draw Vertical Divider Between Columns ---
-      const dividerX = canvas.width / 2 + 10; // X position for divider
-      const dividerStartY = headerHeight + 180; // Start below the title
-      const dividerEndY = canvas.height - 40; // End with bottom padding
-      ctx.strokeStyle = "#bdc3c7"; // Divider color
-      ctx.lineWidth = 3; // Divider width
-      ctx.beginPath(); // Start divider path
-      ctx.moveTo(dividerX, dividerStartY); // Divider start point
-      ctx.lineTo(dividerX, dividerEndY); // Divider end point
-      ctx.stroke(); // Draw divider
+      // --- 4. Footer ---
+      const footerY = H - 60;
+      ctx.fillStyle = colors.textLight;
+      ctx.font = "18px 'Segoe UI', Roboto, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("¡Visítanos hoy para obtener el mejor servicio!", W / 2, footerY);
+      ctx.font = "bold 20px 'Segoe UI', Roboto, sans-serif";
+      ctx.fillStyle = colors.primary;
+      ctx.fillText("Síguenos en Facebook", W / 2, footerY + 30);
 
-      // --- Finalize PNG Export ---
-      generatedContent = canvas.toDataURL("image/png"); // Export as PNG
+      // --- Finalize ---
+      generatedContent = canvas.toDataURL("image/png");
 
       if (preview) {
         setPreviewContent(generatedContent);
@@ -530,6 +492,7 @@ function MainComponent() {
         link.click();
       }
     } else if (format === "pdf") {
+      // --- PDF Export Logic ---
       // Create HTML for PDF with enhanced design
       const printWindow = window.open("", "_blank");
       if (printWindow) {
@@ -751,7 +714,7 @@ function MainComponent() {
               <div class="rates-container">
                 ${selectedCountries
                   .map((countryName) => {
-                    const countryData = countries[countryName];
+                    const countryData = COUNTRIES[countryName];
                     if (!countryData) return "";
 
                     return `
@@ -821,6 +784,10 @@ function MainComponent() {
     setPreviewType("");
   };
 
+  /**
+   * Generates a JSON representation of the current state.
+   * Displayed in the UI for debugging/verification.
+   */
   const getJsonData = () => {
     const jsonData: {
       date: string;
@@ -834,7 +801,7 @@ function MainComponent() {
       rates: {},
     };
 
-    Object.entries(countries).forEach(([country, data]) => {
+    Object.entries(COUNTRIES).forEach(([country, data]) => {
       jsonData.rates[country] = {
         currency: data.currency,
         banks: {},
@@ -850,26 +817,15 @@ function MainComponent() {
     return JSON.stringify(jsonData, null, 2);
   };
 
+  /**
+   * Autopopulates the form with random valid data.
+   * Useful for testing the layout without typing everything manually.
+   */
   const handleAutopopulate = () => {
     const newRates: Rates = {};
-    Object.entries(countries).forEach(([country, data]) => {
+    Object.entries(COUNTRIES).forEach(([country, data]) => {
       data.banks.forEach((bank) => {
-        // Generate a random-ish rate for testing
-        let rate;
-        if (data.currency === "MXN") {
-          rate = (Math.random() * (19 - 18.0) + 18.0).toFixed(2);
-        } else if (data.currency === "HNL") {
-          rate = (Math.random() * (24.7 - 24.5) + 25).toFixed(2);
-        } else if (data.currency === "GTQ") {
-          rate = (Math.random() * (7.8 - 7.6) + 7.6).toFixed(2);
-        } else if (data.currency === "COP") {
-          rate = (Math.random() * (4000 - 3800) + 3800).toFixed(2);
-        } else if (data.currency === "HTG") {
-          rate = (Math.random() * (135 - 130) + 130).toFixed(2);
-        } else {
-          rate = (Math.random() * (100 - 10) + 10).toFixed(2); // Default for others
-        }
-        newRates[bank] = rate;
+        newRates[bank] = generateRandomRate(data.currency);
       });
     });
     setRates(newRates);
@@ -900,7 +856,7 @@ function MainComponent() {
               Países a Incluir:
             </h3>
             <div className="flex flex-wrap justify-center gap-2">
-              {Object.entries(countries).map(([country, data]) => (
+              {Object.entries(COUNTRIES).map(([country, data]) => (
                 <button
                   key={country}
                   onClick={() => handleCountryToggle(country)}
@@ -952,7 +908,7 @@ function MainComponent() {
                 Ingresar Tipos de Cambio
               </h2>
 
-              {Object.entries(countries).map(([country, data]) => (
+              {Object.entries(COUNTRIES).map(([country, data]) => (
                 <div key={country} className="mb-4">
                   <h3 className="text-xl font-medium text-gray-700 mb-2">
                     {country} (USD → {data.currency})
