@@ -390,3 +390,67 @@ export async function deleteCommunication(id: string): Promise<boolean> {
     return false;
   }
 }
+
+// Exchange Rate interface
+export interface ExchangeRate {
+  _id?: ObjectId;
+  rates: { [key: string]: string };
+  logoType: string;
+  selectedCountries: string[];
+  countries: { [key: string]: { currency: string; flag: string; banks: string[] } };
+  created_at: Date;
+}
+
+// Exchange Rate operations
+export async function getLatestExchangeRate(): Promise<ExchangeRate | null> {
+  try {
+    const db = await getDatabase();
+    const collection = db.collection<ExchangeRate>("exchange_rates");
+    // Get the most recent one using find().limit(1) which is more robust
+    const rates = await collection
+      .find({})
+      .sort({ created_at: -1 })
+      .limit(1)
+      .toArray();
+    return rates.length > 0 ? rates[0] : null;
+  } catch (error) {
+    console.error("Error fetching latest exchange rate:", error);
+    return null;
+  }
+}
+
+export async function getExchangeRateHistory(limit = 50): Promise<ExchangeRate[]> {
+  try {
+    const db = await getDatabase();
+    const collection = db.collection<ExchangeRate>("exchange_rates");
+    const rates = await collection
+      .find({})
+      .sort({ created_at: -1 })
+      .limit(limit)
+      .toArray();
+    return rates;
+  } catch (error) {
+    console.error("Error fetching exchange rate history:", error);
+    return [];
+  }
+}
+
+export async function createExchangeRate(
+  rateData: Omit<ExchangeRate, "_id" | "created_at">
+): Promise<ExchangeRate> {
+  try {
+    const db = await getDatabase();
+    const collection = db.collection<ExchangeRate>("exchange_rates");
+
+    const newRate: ExchangeRate = {
+      ...rateData,
+      created_at: new Date(),
+    };
+
+    const result = await collection.insertOne(newRate as any);
+    return { ...newRate, _id: result.insertedId };
+  } catch (error) {
+    console.error("Error creating exchange rate:", error);
+    throw error;
+  }
+}

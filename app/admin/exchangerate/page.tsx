@@ -62,10 +62,17 @@ function MainComponent() {
   const [errors, setErrors] = React.useState<RateErrors>({});
   const [logoType, setLogoType] = React.useState("intermex");
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [selectedCountries, setSelectedCountries] = React.useState(
     INITIAL_SELECTED_COUNTRIES
   );
   
+  // New State for Dynamic Countries
+  const [countries, setCountries] = React.useState<any>(COUNTRIES);
+  const [isEditingBanks, setIsEditingBanks] = React.useState(false);
+  const [editingCountry, setEditingCountry] = React.useState<string | null>(null);
+  const [newBankName, setNewBankName] = React.useState("");
+
   // Preview State
   const [showPreview, setShowPreview] = React.useState(false);
   const [previewContent, setPreviewContent] = React.useState("");
@@ -78,42 +85,53 @@ function MainComponent() {
   // --- Effects ---
 
   /**
-   * Load saved values from localStorage on component mount.
-   * This ensures the user doesn't lose their work if they refresh the page.
+   * Load saved values from API on component mount.
+   * This ensures we get the persistent "current" values and history.
    */
   React.useEffect(() => {
-    const savedRates = localStorage.getItem("exchangeRates");
-    const savedLogoType = localStorage.getItem("exchangeLogoType");
-    const savedCountries = localStorage.getItem("exchangeSelectedCountries");
-    const logs = localStorage.getItem("exchangeRateLogs");
-
-    if (savedRates) {
+    const fetchRates = async () => {
       try {
-        setRates(JSON.parse(savedRates));
-      } catch (error) {
-        console.error("Error loading saved rates:", error);
-      }
-    }
+        setIsLoading(true);
+        const response = await fetch("/api/admin/exchangerate");
+        if (response.ok) {
+          const data = await response.json();
+          
+          // 1. Load Latest (Current) Values
+          if (data.latest) {
+            setRates(data.latest.rates);
+            setLogoType(data.latest.logoType);
+            setSelectedCountries(data.latest.selectedCountries);
+            if (data.latest.countries) {
+              setCountries(data.latest.countries);
+            }
+          }
 
-    if (savedLogoType) {
-      setLogoType(savedLogoType);
-    }
-
-    if (savedCountries) {
-      try {
-        setSelectedCountries(JSON.parse(savedCountries));
+          // 2. Load History
+          if (data.history && Array.isArray(data.history)) {
+            const mappedLogs: LogEntry[] = data.history.map((item: any) => ({
+              id: item._id,
+              date: new Date(item.created_at).toLocaleDateString("es-ES", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              }),
+              timestamp: new Date(item.created_at).toLocaleString("es-ES"),
+              rates: item.rates,
+              logoType: item.logoType,
+              selectedCountries: item.selectedCountries,
+              countries: item.countries || COUNTRIES,
+            }));
+            setSavedLogs(mappedLogs);
+          }
+        }
       } catch (error) {
-        console.error("Error loading saved countries:", error);
+        console.error("Error fetching rates from API:", error);
+      } finally {
+        setIsLoading(false);
       }
-    }
+    };
 
-    if (logs) {
-      try {
-        setSavedLogs(JSON.parse(logs));
-      } catch (error) {
-        console.error("Error loading logs:", error);
-      }
-    }
+    fetchRates();
   }, []);
 
   // --- Handlers ---
@@ -147,7 +165,7 @@ function MainComponent() {
     // Only check banks belonging to selected countries
     const activeBanks: string[] = [];
     selectedCountries.forEach(country => {
-      const countryData = COUNTRIES[country];
+      const countryData = countries[country];
       if (countryData) {
         activeBanks.push(...countryData.banks);
       }
@@ -163,33 +181,51 @@ function MainComponent() {
   };
 
   /**
-   * Saves the current state to localStorage and adds an entry to the logs.
+   * Saves the current state to the API and updates the logs.
    */
-  const saveCurrentValues = () => {
-    const now = new Date();
-    const logEntry: LogEntry = {
-      id: now.getTime().toString(),
-      date: getCurrentDate(),
-      timestamp: now.toLocaleString("es-ES"),
-      rates: { ...rates },
-      logoType,
-      selectedCountries: [...selectedCountries],
-    };
+  const saveCurrentValues = async () => {
+    try {
+      const response = await fetch("/api/admin/exchangerate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          rates,
+          logoType,
+          selectedCountries,
+          countries,
+        }),
+      });
 
-    // Save current values to localStorage
-    localStorage.setItem("exchangeRates", JSON.stringify(rates));
-    localStorage.setItem("exchangeLogoType", logoType);
-    localStorage.setItem(
-      "exchangeSelectedCountries",
-      JSON.stringify(selectedCountries)
-    );
+      if (response.ok) {
+        const newRate = await response.json();
+        const now = new Date(newRate.created_at);
+        
+        const logEntry: LogEntry = {
+          id: newRate._id,
+          date: now.toLocaleDateString("es-ES", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }),
+          timestamp: now.toLocaleString("es-ES"),
+          rates: newRate.rates,
+          logoType: newRate.logoType,
+          selectedCountries: newRate.selectedCountries,
+          countries: newRate.countries,
+        };
 
-    // Add to logs (keep last 50)
-    const updatedLogs = [logEntry, ...savedLogs].slice(0, 50);
-    setSavedLogs(updatedLogs);
-    localStorage.setItem("exchangeRateLogs", JSON.stringify(updatedLogs));
-
-    alert("Valores guardados exitosamente!");
+        // Add to logs (keep last 50)
+        setSavedLogs((prev) => [logEntry, ...prev].slice(0, 50));
+        alert("Valores guardados exitosamente!");
+      } else {
+        alert("Error al guardar los valores.");
+      }
+    } catch (error) {
+      console.error("Error saving values:", error);
+      alert("Error al guardar los valores.");
+    }
   };
 
   /**
@@ -199,16 +235,11 @@ function MainComponent() {
     setRates(logEntry.rates);
     setLogoType(logEntry.logoType);
     setSelectedCountries(logEntry.selectedCountries);
+    if (logEntry.countries) {
+      setCountries(logEntry.countries);
+    }
     setErrors({});
     alert(`Valores del ${logEntry.timestamp} cargados exitosamente!`);
-  };
-
-  const clearLogs = () => {
-    if (confirm("¿Estás seguro de que quieres borrar todos los registros?")) {
-      setSavedLogs([]);
-      localStorage.removeItem("exchangeRateLogs");
-      alert("Registros borrados exitosamente!");
-    }
   };
 
   /**
@@ -253,7 +284,7 @@ function MainComponent() {
 
       // --- Design Configuration ---
       const colors = {
-        primary: logoType === "intermex" ? "#e74c3c" : "#f39c12", // Red or Orange
+        primary: logoType === "intermex" ? "#98fa94ff" : "#3f52ffff", // Red or Orange
         primaryDark: logoType === "intermex" ? "#c0392b" : "#d35400",
         backgroundTop: "#ffffff",
         backgroundBottom: "#f0f2f5",
@@ -785,39 +816,6 @@ function MainComponent() {
   };
 
   /**
-   * Generates a JSON representation of the current state.
-   * Displayed in the UI for debugging/verification.
-   */
-  const getJsonData = () => {
-    const jsonData: {
-      date: string;
-      logo: string;
-      rates: {
-        [key: string]: { currency: string; banks: { [key: string]: number } };
-      };
-    } = {
-      date: getCurrentDate(),
-      logo: logoType,
-      rates: {},
-    };
-
-    Object.entries(COUNTRIES).forEach(([country, data]) => {
-      jsonData.rates[country] = {
-        currency: data.currency,
-        banks: {},
-      };
-
-      data.banks.forEach((bank) => {
-        if (rates[bank]) {
-          jsonData.rates[country].banks[bank] = parseFloat(rates[bank]);
-        }
-      });
-    });
-
-    return JSON.stringify(jsonData, null, 2);
-  };
-
-  /**
    * Autopopulates the form with random valid data.
    * Useful for testing the layout without typing everything manually.
    */
@@ -832,317 +830,382 @@ function MainComponent() {
     setErrors({}); // Clear any existing errors
   };
 
-  const handleCountryToggle = (country: string) => {
-    setSelectedCountries((prev) => {
-      if (prev.includes(country)) {
-        return prev.filter((c) => c !== country);
-      } else {
-        return [...prev, country];
+  // --- Bank Management Handlers ---
+
+  const handleAddBank = (country: string) => {
+    setEditingCountry(country);
+    setNewBankName("");
+    setIsEditingBanks(true);
+  };
+
+  const saveNewBank = () => {
+    if (!editingCountry || !newBankName.trim()) return;
+    
+    setCountries((prev: any) => {
+      const updated = { ...prev };
+      if (updated[editingCountry]) {
+        updated[editingCountry] = {
+          ...updated[editingCountry],
+          banks: [...updated[editingCountry].banks, newBankName.trim()]
+        };
       }
+      return updated;
+    });
+    
+    setNewBankName("");
+  };
+
+  const deleteBank = (country: string, bankToDelete: string) => {
+    if (!confirm(`¿Estás seguro de eliminar ${bankToDelete} de ${country}?`)) return;
+
+    setCountries((prev: any) => {
+      const updated = { ...prev };
+      if (updated[country]) {
+        updated[country] = {
+          ...updated[country],
+          banks: updated[country].banks.filter((b: string) => b !== bankToDelete)
+        };
+      }
+      return updated;
     });
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-2">
-      <div className="max-w-5xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-4 mb-4">
-          <h1 className="text-5xl font-bold text-gray-800 mb-4 text-center">
-            Tipos de Cambio
-          </h1>
+  const closeBankManager = () => {
+    setIsEditingBanks(false);
+    setEditingCountry(null);
+  };
 
-          {/* Country Selection */}
-          <div className="mb-4 bg-blue-50 p-3 rounded-lg border-2 border-blue-200">
-            <h3 className="text-md font-medium text-gray-700 mb-2 text-center">
-              Países a Incluir:
-            </h3>
-            <div className="flex flex-wrap justify-center gap-2">
-              {Object.entries(COUNTRIES).map(([country, data]) => (
-                <button
-                  key={country}
-                  onClick={() => handleCountryToggle(country)}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
-                    selectedCountries.includes(country)
-                      ? "bg-blue-700 text-white border-blue-500"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                  }`}
-                >
-                  {data.flag} {country}
-                </button>
-              ))}
-            </div>
+  // --- Render Helpers ---
+
+  const renderCountryCard = (countryName: string) => {
+    const data = countries[countryName];
+    if (!data) return null;
+
+    // Use image flag if available, fallback to emoji (though we should have images for all)
+    const flagSrc = FLAG_IMAGES[countryName] || null;
+
+    return (
+      <div key={countryName} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {flagSrc ? (
+              <img 
+                src={flagSrc} 
+                alt={`${countryName} flag`} 
+                className="w-8 h-8 rounded-full object-cover border border-gray-200"
+              />
+            ) : (
+              <span className="text-2xl" role="img" aria-label={countryName}>
+                {data.flag}
+              </span>
+            )}
+            <h3 className="font-bold text-gray-700">{countryName}</h3>
           </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono bg-gray-200 text-gray-600 px-2 py-1 rounded">
+              {data.currency}
+            </span>
+            <button
+              onClick={() => handleAddBank(countryName)}
+              className="p-1 hover:bg-gray-200 rounded text-gray-500 transition-colors"
+              title="Administrar Bancos"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div className="p-4 space-y-3">
+          {data.banks.map((bank: string) => (
+            <div key={bank} className="flex items-center justify-between gap-3 group">
+              <label className="text-sm font-medium text-gray-600 flex-1 truncate" title={bank}>
+                {bank}
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="relative w-32">
+                  <input
+                    type="text"
+                    value={rates[bank] || ""}
+                    onChange={(e) => handleRateChange(bank, e.target.value)}
+                    placeholder="0.00"
+                    className={`w-full px-3 py-1.5 text-right text-sm border rounded-lg focus:ring-2 focus:outline-none transition-all ${
+                      errors[bank]
+                        ? "border-red-300 focus:ring-red-200 bg-red-50"
+                        : "border-gray-300 focus:ring-blue-200 focus:border-blue-400"
+                    }`}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="h-[calc(100vh-80px)] flex flex-col bg-gray-100 -m-6">
+      
+      {/* Top Action Bar */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shrink-0 z-10 shadow-sm">
+        <div className="flex items-center gap-6">
+          <div>
+            <h1 className="text-xl font-bold text-gray-800">Admin Tipo de Cambio</h1>
+            <p className="text-xs text-gray-500">{getCurrentDate()}</p>
+          </div>
+          
+          <div className="h-8 w-px bg-gray-300 mx-2"></div>
 
           {/* Logo Toggle */}
-          <div className="mb-4 text-center">
-            <label className="text-md font-medium text-gray-700 mr-3">
-              Compañía:
-            </label>
-            <div className="inline-flex rounded-md shadow-sm">
-              <button
-                onClick={() => setLogoType("intermex")}
-                className={`px-3 py-1.5 text-sm font-medium rounded-l-md border ${
-                  logoType === "intermex"
-                    ? "bg-green-700 text-white border-green-600"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                }`}
-              >
-                Intermex
-              </button>
-              <button
-                onClick={() => setLogoType("ria")}
-                className={`px-3 py-1.5 text-sm font-medium rounded-r-md border-t border-r border-b ${
-                  logoType === "ria"
-                    ? "bg-orange-500 text-white border-blue-500"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                }`}
-              >
-                RIA
-              </button>
-            </div>
+          <div className="flex bg-gray-100 p-1 rounded-lg">
+            <button
+              onClick={() => setLogoType("intermex")}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                logoType === "intermex"
+                  ? "bg-white text-red-600 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Intermex
+            </button>
+            <button
+              onClick={() => setLogoType("ria")}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                logoType === "ria"
+                  ? "bg-white text-orange-600 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Ria
+            </button>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Input Form */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-3">
-                Ingresar Tipos de Cambio
-              </h2>
+        <div className="flex items-center gap-3">
+           <button
+            onClick={handleAutopopulate}
+            className="px-3 py-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors text-sm font-medium"
+            title="Autocompletar con datos de prueba"
+          >
+            🪄 Auto
+          </button>
 
-              {Object.entries(COUNTRIES).map(([country, data]) => (
-                <div key={country} className="mb-4">
-                  <h3 className="text-xl font-medium text-gray-700 mb-2">
-                    {country} (USD → {data.currency})
-                  </h3>
+           <button
+            onClick={saveCurrentValues}
+            disabled={isLoading}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
+          >
+            {isLoading ? "Guardando..." : "Guardar Valores"}
+          </button>
+          
+          <div className="h-8 w-px bg-gray-300 mx-2"></div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
-                    {data.banks.map((bank) => (
-                      <div key={bank}>
-                        <label className="block text-sm font-medium text-gray-600 mb-0.5">
-                          {bank}
-                        </label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          value={rates[bank]}
-                          onChange={(e) =>
-                            handleRateChange(bank, e.target.value)
-                          }
-                          className={`w-full px-2 py-1.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                            errors[bank] ? "border-red-500" : "border-gray-300"
-                          }`}
-                        />
-                        {errors[bank] && (
-                          <p className="text-red-500 text-xs mt-0.5">
-                            {errors[bank]}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+          <button
+            onClick={() => generateTemplate("png", true)}
+            disabled={!allFieldsValid() || isGenerating}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
+          >
+            Vista Previa
+          </button>
+          
+          <button
+            onClick={() => generateTemplate("png")}
+            disabled={!allFieldsValid() || isGenerating}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white transition-colors text-sm font-medium shadow-sm ${
+              !allFieldsValid() || isGenerating
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
+          >
+            Descargar PNG
+          </button>
 
-            {/* JSON Display */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-3">
-                Formato JSON
-              </h2>
-              <div className="bg-gray-100 rounded-md p-3 h-96 overflow-auto">
-                <pre className="text-sm text-gray-800 whitespace-pre-wrap">
-                  {getJsonData()}
-                </pre>
-              </div>
-
-              {/* Preview Buttons */}
-              <div className="mt-4 bg-gray-100 rounded-lg shadow-inner p-4">
-                <h3 className="text-md font-medium text-gray-700 mb-2 text-center">
-                  Vista Previa
-                </h3>
-                <div className="flex justify-center space-x-3">
-                  <button
-                    onClick={() => generateTemplate("pdf", true)}
-                    disabled={!allFieldsValid() || isGenerating}
-                    className="px-4 py-1.5 bg-red-700 text-white rounded-md hover:bg-red-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                  >
-                    PDF
-                  </button>
-                  <button
-                    onClick={() => generateTemplate("png", true)}
-                    disabled={!allFieldsValid() || isGenerating}
-                    className="px-4 py-1.5 bg-blue-700 text-white rounded-md hover:bg-blue-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                  >
-                    PNG
-                  </button>
-                </div>
-
-                {/* Export Buttons */}
-                <div className="mt-4">
-                  <h3 className="text-md font-medium text-gray-700 mb-2 text-center">
-                    Exportar
-                  </h3>
-                  <div className="flex justify-center space-x-3">
-                    <button
-                      onClick={() => generateTemplate("pdf")}
-                      disabled={!allFieldsValid() || isGenerating}
-                      className="px-4 py-1.5 bg-red-700 text-white rounded-md hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                    >
-                      {isGenerating ? "Generando..." : "PDF"}
-                    </button>
-                    <button
-                      onClick={() => generateTemplate("png")}
-                      disabled={!allFieldsValid() || isGenerating}
-                      className="px-4 py-1.5 bg-blue-700 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                    >
-                      {isGenerating ? "Generando..." : "PNG"}
-                    </button>
-                  </div>
-
-                  {!allFieldsValid() && (
-                    <p className="text-yellow-600 text-xs mt-1 text-center">
-                      {selectedCountries.length === 0
-                        ? "✅ Los países seleccionados mostrarán campos de entrada abajo"
-                        : "Por favor complete todos los campos para los países seleccionados con tasas válidas para habilitar la exportación"}
-                    </p>
-                  )}
-                </div>
-
-                {/* Management Buttons */}
-                <div className="mt-4">
-                  <h3 className="text-md font-medium text-gray-700 mb-2 text-center">
-                    Administración
-                  </h3>
-                  <div className="flex justify-center space-x-3">
-                    <button
-                      onClick={handleAutopopulate}
-                      className="px-4 py-1.5 bg-purple-700 text-white rounded-md hover:bg-purple-600"
-                    >
-                      Autocompletar
-                    </button>
-                    <button
-                      onClick={saveCurrentValues}
-                      className="px-4 py-1.5 bg-green-700 text-white rounded-md hover:bg-green-600"
-                    >
-                      Guardar Valores
-                    </button>
-                    <button
-                      onClick={() => setShowLogs(!showLogs)}
-                      className="px-4 py-1.5 bg-gray-700 text-white rounded-md hover:bg-gray-600"
-                    >
-                      {showLogs ? "Ocultar" : "Ver"} Historial
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Logs Section */}
-          {showLogs && (
-            <div className="mt-6 bg-white rounded-lg shadow-lg p-4">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-800">
-                  Historial de Valores Guardados
-                </h2>
-                {savedLogs.length > 0 && (
-                  <button
-                    onClick={clearLogs}
-                    className="px-3 py-1 bg-red-600 text-white text-sm rounded-md hover:bg-red-700"
-                  >
-                    Borrar Historial
-                  </button>
-                )}
-              </div>
-
-              {savedLogs.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">
-                  No hay registros guardados aún.
-                </p>
-              ) : (
-                <div className="max-h-96 overflow-y-auto">
-                  <div className="space-y-3">
-                    {savedLogs.map((log) => (
-                      <div
-                        key={log.id}
-                        className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50"
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h3 className="font-medium text-gray-800">
-                              {log.timestamp}
-                            </h3>
-                            <p className="text-sm text-gray-600">
-                              Logo:{" "}
-                              {log.logoType === "intermex" ? "Intermex" : "RIA"}{" "}
-                              | Países: {log.selectedCountries.join(", ")}
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => loadLogEntry(log)}
-                            className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
-                          >
-                            Cargar
-                          </button>
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                            {Object.entries(log.rates)
-                              .filter(([_, rate]) => rate)
-                              .map(([bank, rate]) => (
-                                <span key={bank} className="truncate">
-                                  {bank}: {rate}
-                                </span>
-                              ))}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          <button
+            onClick={() => generateTemplate("pdf")}
+            disabled={!allFieldsValid() || isGenerating}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white transition-colors text-sm font-medium shadow-sm ${
+              !allFieldsValid() || isGenerating
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-red-600 hover:bg-red-700"
+            }`}
+          >
+            PDF
+          </button>
         </div>
       </div>
 
-      {/* Preview Modal */}
-      {showPreview && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50 p-2">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl h-5/6 flex flex-col">
-            <div className="flex justify-between items-center p-3 border-b border-gray-200">
-              <h2 className="text-lg font-semibold">
-                Vista Previa de Plantilla
-              </h2>
-              <button
-                onClick={closePreview}
-                className="text-gray-500 hover:text-gray-800 text-2xl font-bold"
-              >
-                &times;
+      {/* Main Workspace */}
+      <div className="flex-1 flex overflow-hidden">
+        
+        {/* Left: Country Grid */}
+        <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-gray-300">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+            
+            {/* Column 1: Mexico (Largest) */}
+            <div className="space-y-6">
+              {renderCountryCard("Mexico")}
+            </div>
+
+            {/* Column 2: Central America */}
+            <div className="space-y-6">
+              {renderCountryCard("Honduras")}
+              {renderCountryCard("Guatemala")}
+            </div>
+
+            {/* Column 3: South America & Caribbean */}
+            <div className="space-y-6">
+              {renderCountryCard("Colombia")}
+              {renderCountryCard("Haiti")}
+            </div>
+
+          </div>
+        </div>
+
+        {/* Right: History Sidebar */}
+        <div className="w-80 bg-white border-l border-gray-200 flex flex-col shrink-0">
+          <div className="p-4 border-b border-gray-100 bg-gray-50">
+            <h2 className="font-semibold text-gray-700">Historial</h2>
+            <p className="text-xs text-gray-500">Últimos cambios guardados</p>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-0">
+            {savedLogs.length === 0 ? (
+              <div className="p-8 text-center text-gray-400 text-sm">
+                No hay historial disponible
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {savedLogs.map((log) => (
+                  <button
+                    key={log.id}
+                    onClick={() => loadLogEntry(log)}
+                    className="w-full text-left p-4 hover:bg-blue-50 transition-colors group"
+                  >
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="font-medium text-gray-800 text-sm">
+                        {log.date}
+                      </span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                        log.logoType === 'intermex' 
+                          ? 'border-red-100 text-red-600 bg-red-50' 
+                          : 'border-orange-100 text-orange-600 bg-orange-50'
+                      }`}>
+                        {log.logoType === 'intermex' ? 'IMX' : 'RIA'}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-500 mb-2">
+                      {log.timestamp.split(' ')[1]}
+                    </div>
+                    <div className="text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity font-medium">
+                      Cargar estos valores →
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+      </div>
+
+      {/* Bank Manager Modal */}
+      {isEditingBanks && editingCountry && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
+            <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
+              <h3 className="font-bold text-gray-800">Administrar Bancos - {editingCountry}</h3>
+              <button onClick={closeBankManager} className="text-gray-500 hover:text-gray-700">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
-            <div className="flex-grow overflow-auto p-3">
+            
+            <div className="p-4 max-h-[60vh] overflow-y-auto">
+              <div className="space-y-2 mb-4">
+                {countries[editingCountry]?.banks.map((bank: string) => (
+                  <div key={bank} className="flex justify-between items-center p-2 bg-gray-50 rounded border border-gray-100">
+                    <span className="text-sm font-medium text-gray-700">{bank}</span>
+                    <button 
+                      onClick={() => deleteBank(editingCountry, bank)}
+                      className="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded"
+                      title="Eliminar banco"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100">
+                <input
+                  type="text"
+                  value={newBankName}
+                  onChange={(e) => setNewBankName(e.target.value)}
+                  placeholder="Nombre del nuevo banco"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  onKeyDown={(e) => e.key === 'Enter' && saveNewBank()}
+                />
+                <button
+                  onClick={saveNewBank}
+                  disabled={!newBankName.trim()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  Agregar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Preview Modal */}
+      {showPreview && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="p-4 border-b flex justify-between items-center bg-gray-50">
+              <h3 className="font-bold text-gray-800">Vista Previa</h3>
+              <button
+                onClick={closePreview}
+                className="text-gray-500 hover:text-gray-700 p-1 hover:bg-gray-200 rounded-full transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-8 bg-gray-100 flex justify-center">
               {previewType === "image" && (
                 <img
                   src={previewContent}
-                  alt="Vista Previa PNG"
-                  className="max-w-full h-auto mx-auto"
+                  alt="Preview"
+                  className="max-w-full shadow-lg rounded-lg object-contain"
+                  style={{ maxHeight: "70vh" }}
                 />
               )}
-              {previewType === "html" && (
-                <iframe
-                  srcDoc={previewContent}
-                  className="w-full h-full border-none"
-                  title="Vista Previa PDF"
-                ></iframe>
-              )}
             </div>
-            <div className="p-3 border-t border-gray-200 text-right">
+            <div className="p-4 border-t bg-white flex justify-end gap-3">
               <button
                 onClick={closePreview}
-                className="px-4 py-1.5 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 Cerrar
+              </button>
+              <button
+                onClick={() => {
+                  const link = document.createElement("a");
+                  link.download = `exchange-rates-${new Date().toISOString().split("T")[0]}.png`;
+                  link.href = previewContent;
+                  link.click();
+                  closePreview();
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+              >
+                Descargar
               </button>
             </div>
           </div>

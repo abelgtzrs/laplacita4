@@ -34,4 +34,5 @@ export type LogEntry = {
   rates: Rates;
   logoType: string;
   selectedCountries: string[];
+  countries: Countries;
 };
