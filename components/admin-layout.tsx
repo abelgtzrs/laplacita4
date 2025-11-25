@@ -5,7 +5,7 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { LogOut, Package, Tag, MessageSquare, DollarSign } from "lucide-react";
+import { LogOut, Package, Tag, MessageSquare, DollarSign, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/language-context";
 
@@ -19,6 +19,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   useEffect(() => {
     const authStatus = localStorage.getItem("adminAuth");
@@ -81,6 +82,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="p-2 rounded-md text-gray-500 hover:bg-gray-100 focus:outline-none"
+                title={isSidebarOpen ? "Ocultar menú" : "Mostrar menú"}
+              >
+                <Menu className="h-6 w-6" />
+              </button>
               <Link href="/" className="flex items-center space-x-2">
                 <div className="text-black px-3 py-1 rounded font-bold">
                   La Placita FTP
@@ -107,27 +115,29 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
       <div className="flex">
         {/* Sidebar */}
-        <nav className="bg-white shadow-md min-h-screen w-16 md:w-64 transition-all duration-300 ease-in-out">
-          <div className="p-2 md:p-4 flex flex-col h-full">
-            <div className="space-y-2 flex-1">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  title={item.name}
-                  className={`flex items-center px-2 md:px-3 py-2 rounded-md text-sm font-medium transition-colors justify-center md:justify-start ${
-                    item.current
-                      ? "bg-green-100 text-green-700"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                  }`}
-                >
-                  <item.icon className="h-5 w-5 md:mr-3" />
-                  <span className="hidden md:inline">{item.name}</span>
-                </Link>
-              ))}
+        {isSidebarOpen && (
+          <nav className="bg-white shadow-md min-h-screen w-16 md:w-64 transition-all duration-300 ease-in-out shrink-0">
+            <div className="p-2 md:p-4 flex flex-col h-full">
+              <div className="space-y-2 flex-1">
+                {navigation.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    title={item.name}
+                    className={`flex items-center px-2 md:px-3 py-2 rounded-md text-sm font-medium transition-colors justify-center md:justify-start ${
+                      item.current
+                        ? "bg-green-100 text-green-700"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    }`}
+                  >
+                    <item.icon className="h-5 w-5 md:mr-3" />
+                    <span className="hidden md:inline">{item.name}</span>
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
-        </nav>
+          </nav>
+        )}
 
         {/* Main Content */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">

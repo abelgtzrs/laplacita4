@@ -12,6 +12,17 @@ import {
   INITIAL_SELECTED_COUNTRIES,
   FLAG_IMAGES,
 } from "./constants";
+
+const AVAILABLE_FONTS = [
+  { name: "Segoe UI", value: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
+  { name: "Roboto", value: "'Roboto', sans-serif" },
+  { name: "Helvetica", value: "'Helvetica', Arial, sans-serif" },
+  { name: "Arial", value: "'Arial', sans-serif" },
+  { name: "Times New Roman", value: "'Times New Roman', serif" },
+  { name: "Courier New", value: "'Courier New', monospace" },
+  { name: "Verdana", value: "'Verdana', sans-serif" },
+  { name: "Georgia", value: "'Georgia', serif" },
+];
 import {
   validateRate,
   getCurrentDate,
@@ -81,8 +92,52 @@ function MainComponent() {
   // Logs State
   const [savedLogs, setSavedLogs] = React.useState<LogEntry[]>([]);
   const [showLogs, setShowLogs] = React.useState(false);
+  const [showHistory, setShowHistory] = React.useState(true);
+  
+  // Design Config State
+  const [designConfig, setDesignConfig] = React.useState({
+    bgColorTop: "#ffffff",
+    bgColorBottom: "#f0f2f5",
+    textColor: "#2c3e50",
+    cardBgColor: "#ffffff",
+    accentColor: "#27ae60",
+    headerBgColor: logoType === "intermex" ? "#98fa94ff" : "#3f52ffff",
+    headerTextColor: "#ffffff",
+    footerTextColor: "#7f8c8d",
+    fontFamily: AVAILABLE_FONTS[0].value,
+    showFooter: true,
+    showDate: true,
+  });
 
   // --- Effects ---
+
+  /**
+   * Load Design Config from LocalStorage on Mount
+   */
+  React.useEffect(() => {
+    const savedConfig = localStorage.getItem("exchangeRateDesignConfig");
+    if (savedConfig) {
+      try {
+        const parsed = JSON.parse(savedConfig);
+        setDesignConfig((prev) => ({ ...prev, ...parsed }));
+      } catch (e) {
+        console.error("Failed to parse saved design config", e);
+      }
+    }
+  }, []);
+
+  /**
+   * Live Preview Effect
+   * Regenerates the preview when design config changes (if preview is open)
+   */
+  React.useEffect(() => {
+    if (showPreview && previewType === "image") {
+      const timer = setTimeout(() => {
+        generateTemplate("png", true);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [designConfig, rates, logoType, selectedCountries]);
 
   /**
    * Load saved values from API on component mount.
@@ -284,15 +339,17 @@ function MainComponent() {
 
       // --- Design Configuration ---
       const colors = {
-        primary: logoType === "intermex" ? "#98fa94ff" : "#3f52ffff", // Red or Orange
+        primary: designConfig.headerBgColor, // Use custom header color
         primaryDark: logoType === "intermex" ? "#c0392b" : "#d35400",
-        backgroundTop: "#ffffff",
-        backgroundBottom: "#f0f2f5",
-        textMain: "#2c3e50",
-        textLight: "#7f8c8d",
-        cardBg: "rgba(255, 255, 255, 0.95)",
+        backgroundTop: designConfig.bgColorTop,
+        backgroundBottom: designConfig.bgColorBottom,
+        textMain: designConfig.textColor,
+        textLight: designConfig.footerTextColor,
+        cardBg: designConfig.cardBgColor, // Use hex directly, or add opacity if needed
         cardShadow: "rgba(0, 0, 0, 0.1)",
-        accent: "#27ae60", // Green for rates
+        accent: designConfig.accentColor,
+        headerText: designConfig.headerTextColor,
+        font: designConfig.fontFamily,
       };
 
       // --- 1. Background ---
@@ -350,8 +407,8 @@ function MainComponent() {
       ctx.textAlign = "center";
       
       // "Tipos de Cambio"
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 60px 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+      ctx.fillStyle = colors.headerText;
+      ctx.font = `bold 60px ${colors.font}`;
       ctx.shadowColor = "rgba(0,0,0,0.3)";
       ctx.shadowBlur = 4;
       ctx.shadowOffsetY = 2;
@@ -361,18 +418,28 @@ function MainComponent() {
 
       // Date Badge
       const dateText = getCurrentDate();
-      ctx.font = "bold 28px 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+      ctx.font = `bold 28px ${colors.font}`;
       const dateWidth = ctx.measureText(dateText).width + 60;
       
       // Date background pill
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.roundRect((W - dateWidth) / 2, 260, dateWidth, 50, 25);
-      ctx.fill();
+      if (designConfig.showDate) {
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.roundRect((W - dateWidth) / 2, 260, dateWidth, 50, 25);
+        ctx.fill();
+      }
       
       // Date text
-      ctx.fillStyle = colors.primaryDark;
-      ctx.fillText(dateText, W / 2, 295);
+      if (designConfig.showDate) {
+        ctx.fillStyle = colors.primaryDark;
+        ctx.fillText(dateText, W / 2, 295);
+      } else {
+        // If date is hidden, maybe we don't draw the pill either? 
+        // For now, let's just hide the text or both.
+        // Actually, let's redraw the background over it if we want to hide it completely, 
+        // but the pill was drawn above. 
+        // Let's just skip drawing the pill and text if showDate is false.
+      }
 
       // --- 3. Content Grid (Countries) ---
       const startY = 360;
@@ -443,11 +510,11 @@ function MainComponent() {
         // Country Name
         ctx.textAlign = "left";
         ctx.fillStyle = colors.textMain;
-        ctx.font = "bold 28px 'Segoe UI', Roboto, sans-serif";
+        ctx.font = `bold 28px ${colors.font}`;
         ctx.fillText(countryName.toUpperCase(), x + 85, y + 45);
         
         // Currency Code (Small pill)
-        ctx.font = "bold 14px 'Segoe UI', Roboto, sans-serif";
+        ctx.font = `bold 14px ${colors.font}`;
         ctx.fillStyle = "#ecf0f1";
         ctx.beginPath();
         ctx.roundRect(x + colWidth - 70, y + 25, 50, 24, 12);
@@ -471,14 +538,14 @@ function MainComponent() {
         data.banks.forEach((bank) => {
           // Bank Name
           ctx.fillStyle = "#34495e";
-          ctx.font = "600 22px 'Segoe UI', Roboto, sans-serif";
+          ctx.font = `600 22px ${colors.font}`;
           ctx.fillText(bank, x + 25, rowY);
 
           // Rate (Highlighted)
           const rateVal = rates[bank] || "---";
           ctx.textAlign = "right";
           ctx.fillStyle = colors.accent;
-          ctx.font = "bold 32px 'Segoe UI', Roboto, sans-serif";
+          ctx.font = `bold 32px ${colors.font}`;
           ctx.fillText(rateVal, x + colWidth - 25, rowY);
           
           // Reset for next row
@@ -498,14 +565,17 @@ function MainComponent() {
       });
 
       // --- 4. Footer ---
-      const footerY = H - 60;
-      ctx.fillStyle = colors.textLight;
-      ctx.font = "18px 'Segoe UI', Roboto, sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("¡Visítanos hoy para obtener el mejor servicio!", W / 2, footerY);
-      ctx.font = "bold 20px 'Segoe UI', Roboto, sans-serif";
-      ctx.fillStyle = colors.primary;
-      ctx.fillText("Síguenos en Facebook", W / 2, footerY + 30);
+      if (designConfig.showFooter) {
+        const footerY = H - 80;
+        const footerZ = W - 280;
+        ctx.fillStyle = colors.textLight;
+        ctx.font = `18px ${colors.font}`;
+        ctx.textAlign = "center";
+        ctx.fillText("¡Visítanos hoy para obtener el mejor servicio!", footerZ, footerY);
+        ctx.font = `bold 20px ${colors.font}`;
+        ctx.fillStyle = colors.primary;
+        ctx.fillText("Síguenos en Facebook", footerZ, footerY + 30);
+      }
 
       // --- Finalize ---
       generatedContent = canvas.toDataURL("image/png");
@@ -1033,6 +1103,20 @@ function MainComponent() {
           >
             PDF
           </button>
+          
+          <div className="h-8 w-px bg-gray-300 mx-2"></div>
+
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-sm ${
+              showHistory
+                ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-50"
+            }`}
+            title={showHistory ? "Ocultar Historial" : "Mostrar Historial"}
+          >
+            {showHistory ? "Ocultar Historial" : "Mostrar Historial"}
+          </button>
         </div>
       </div>
 
@@ -1064,49 +1148,51 @@ function MainComponent() {
         </div>
 
         {/* Right: History Sidebar */}
-        <div className="w-80 bg-white border-l border-gray-200 flex flex-col shrink-0">
-          <div className="p-4 border-b border-gray-100 bg-gray-50">
-            <h2 className="font-semibold text-gray-700">Historial</h2>
-            <p className="text-xs text-gray-500">Últimos cambios guardados</p>
+        {showHistory && (
+          <div className="w-80 bg-white border-l border-gray-200 flex flex-col shrink-0">
+            <div className="p-4 border-b border-gray-100 bg-gray-50">
+              <h2 className="font-semibold text-gray-700">Historial</h2>
+              <p className="text-xs text-gray-500">Últimos cambios guardados</p>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-0">
+              {savedLogs.length === 0 ? (
+                <div className="p-8 text-center text-gray-400 text-sm">
+                  No hay historial disponible
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {savedLogs.map((log) => (
+                    <button
+                      key={log.id}
+                      onClick={() => loadLogEntry(log)}
+                      className="w-full text-left p-4 hover:bg-blue-50 transition-colors group"
+                    >
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="font-medium text-gray-800 text-sm">
+                          {log.date}
+                        </span>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                          log.logoType === 'intermex' 
+                            ? 'border-red-100 text-red-600 bg-red-50' 
+                            : 'border-orange-100 text-orange-600 bg-orange-50'
+                        }`}>
+                          {log.logoType === 'intermex' ? 'IMX' : 'RIA'}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-500 mb-2">
+                        {log.timestamp.split(' ')[1]}
+                      </div>
+                      <div className="text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity font-medium">
+                        Cargar estos valores →
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-          
-          <div className="flex-1 overflow-y-auto p-0">
-            {savedLogs.length === 0 ? (
-              <div className="p-8 text-center text-gray-400 text-sm">
-                No hay historial disponible
-              </div>
-            ) : (
-              <div className="divide-y divide-gray-100">
-                {savedLogs.map((log) => (
-                  <button
-                    key={log.id}
-                    onClick={() => loadLogEntry(log)}
-                    className="w-full text-left p-4 hover:bg-blue-50 transition-colors group"
-                  >
-                    <div className="flex justify-between items-start mb-1">
-                      <span className="font-medium text-gray-800 text-sm">
-                        {log.date}
-                      </span>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
-                        log.logoType === 'intermex' 
-                          ? 'border-red-100 text-red-600 bg-red-50' 
-                          : 'border-orange-100 text-orange-600 bg-orange-50'
-                      }`}>
-                        {log.logoType === 'intermex' ? 'IMX' : 'RIA'}
-                      </span>
-                    </div>
-                    <div className="text-xs text-gray-500 mb-2">
-                      {log.timestamp.split(' ')[1]}
-                    </div>
-                    <div className="text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity font-medium">
-                      Cargar estos valores →
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        )}
 
       </div>
 
@@ -1166,47 +1252,242 @@ function MainComponent() {
       {/* Preview Modal */}
       {showPreview && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
-            <div className="p-4 border-b flex justify-between items-center bg-gray-50">
-              <h3 className="font-bold text-gray-800">Vista Previa</h3>
-              <button
-                onClick={closePreview}
-                className="text-gray-500 hover:text-gray-700 p-1 hover:bg-gray-200 rounded-full transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="flex-1 overflow-auto p-8 bg-gray-100 flex justify-center">
-              {previewType === "image" && (
-                <img
-                  src={previewContent}
-                  alt="Preview"
-                  className="max-w-full shadow-lg rounded-lg object-contain"
-                  style={{ maxHeight: "70vh" }}
-                />
-              )}
-            </div>
-            <div className="p-4 border-t bg-white flex justify-end gap-3">
-              <button
-                onClick={closePreview}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                Cerrar
-              </button>
-              <button
-                onClick={() => {
-                  const link = document.createElement("a");
-                  link.download = `exchange-rates-${new Date().toISOString().split("T")[0]}.png`;
-                  link.href = previewContent;
-                  link.click();
-                  closePreview();
-                }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-              >
-                Descargar
-              </button>
+          <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex overflow-hidden">
+            
+            {/* Left: Controls (Only for Image Preview) */}
+            {previewType === "image" && (
+              <div className="w-80 bg-gray-50 border-r border-gray-200 p-6 flex flex-col overflow-y-auto shrink-0">
+                <h3 className="font-bold text-gray-800 mb-4 text-lg">Personalizar Diseño</h3>
+                
+                <div className="space-y-6">
+                  {/* Colors */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Colores</h4>
+                    
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Fondo Superior</label>
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="color" 
+                          value={designConfig.bgColorTop}
+                          onChange={(e) => setDesignConfig(prev => ({ ...prev, bgColorTop: e.target.value }))}
+                          className="h-8 w-12 rounded cursor-pointer border border-gray-300"
+                        />
+                        <span className="text-xs font-mono text-gray-600">{designConfig.bgColorTop}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Fondo Inferior</label>
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="color" 
+                          value={designConfig.bgColorBottom}
+                          onChange={(e) => setDesignConfig(prev => ({ ...prev, bgColorBottom: e.target.value }))}
+                          className="h-8 w-12 rounded cursor-pointer border border-gray-300"
+                        />
+                        <span className="text-xs font-mono text-gray-600">{designConfig.bgColorBottom}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Tarjetas</label>
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="color" 
+                          value={designConfig.cardBgColor}
+                          onChange={(e) => setDesignConfig(prev => ({ ...prev, cardBgColor: e.target.value }))}
+                          className="h-8 w-12 rounded cursor-pointer border border-gray-300"
+                        />
+                        <span className="text-xs font-mono text-gray-600">{designConfig.cardBgColor}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Texto Principal</label>
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="color" 
+                          value={designConfig.textColor}
+                          onChange={(e) => setDesignConfig(prev => ({ ...prev, textColor: e.target.value }))}
+                          className="h-8 w-12 rounded cursor-pointer border border-gray-300"
+                        />
+                        <span className="text-xs font-mono text-gray-600">{designConfig.textColor}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Acento (Tasas)</label>
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="color" 
+                          value={designConfig.accentColor}
+                          onChange={(e) => setDesignConfig(prev => ({ ...prev, accentColor: e.target.value }))}
+                          className="h-8 w-12 rounded cursor-pointer border border-gray-300"
+                        />
+                        <span className="text-xs font-mono text-gray-600">{designConfig.accentColor}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Fondo Cabecera</label>
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="color" 
+                          value={designConfig.headerBgColor}
+                          onChange={(e) => setDesignConfig(prev => ({ ...prev, headerBgColor: e.target.value }))}
+                          className="h-8 w-12 rounded cursor-pointer border border-gray-300"
+                        />
+                        <span className="text-xs font-mono text-gray-600">{designConfig.headerBgColor}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Texto Cabecera</label>
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="color" 
+                          value={designConfig.headerTextColor}
+                          onChange={(e) => setDesignConfig(prev => ({ ...prev, headerTextColor: e.target.value }))}
+                          className="h-8 w-12 rounded cursor-pointer border border-gray-300"
+                        />
+                        <span className="text-xs font-mono text-gray-600">{designConfig.headerTextColor}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Texto Pie de Página</label>
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="color" 
+                          value={designConfig.footerTextColor}
+                          onChange={(e) => setDesignConfig(prev => ({ ...prev, footerTextColor: e.target.value }))}
+                          className="h-8 w-12 rounded cursor-pointer border border-gray-300"
+                        />
+                        <span className="text-xs font-mono text-gray-600">{designConfig.footerTextColor}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Fonts */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Tipografía</h4>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Fuente</label>
+                      <select
+                        value={designConfig.fontFamily}
+                        onChange={(e) => setDesignConfig(prev => ({ ...prev, fontFamily: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      >
+                        {AVAILABLE_FONTS.map(font => (
+                          <option key={font.name} value={font.value}>
+                            {font.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Toggles */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Opciones</h4>
+                    
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={designConfig.showDate}
+                        onChange={(e) => setDesignConfig(prev => ({ ...prev, showDate: e.target.checked }))}
+                        className="rounded text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">Mostrar Fecha</span>
+                    </label>
+
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={designConfig.showFooter}
+                        onChange={(e) => setDesignConfig(prev => ({ ...prev, showFooter: e.target.checked }))}
+                        className="rounded text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">Mostrar Pie de Página</span>
+                    </label>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="pt-4 border-t border-gray-200 space-y-3">
+                    <button
+                      onClick={() => {
+                        localStorage.setItem("exchangeRateDesignConfig", JSON.stringify(designConfig));
+                        alert("Diseño guardado exitosamente!");
+                      }}
+                      className="w-full py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                    >
+                      Guardar Diseño
+                    </button>
+                    
+                    <button
+                      onClick={() => setDesignConfig({
+                        bgColorTop: "#ffffff",
+                        bgColorBottom: "#f0f2f5",
+                        textColor: "#2c3e50",
+                        cardBgColor: "#ffffff",
+                        accentColor: "#27ae60",
+                        headerBgColor: logoType === "intermex" ? "#98fa94ff" : "#3f52ffff",
+                        headerTextColor: "#ffffff",
+                        footerTextColor: "#7f8c8d",
+                        fontFamily: AVAILABLE_FONTS[0].value,
+                        showFooter: true,
+                        showDate: true
+                      })}
+                      className="w-full py-2 text-xs text-gray-500 hover:text-gray-800 hover:bg-gray-200 rounded transition-colors"
+                    >
+                      Restablecer Diseño
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Right: Preview Area */}
+            <div className="flex-1 flex flex-col min-w-0">
+              <div className="p-4 border-b flex justify-between items-center bg-white z-10">
+                <h3 className="font-bold text-gray-800">Vista Previa</h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      const link = document.createElement("a");
+                      link.download = `exchange-rates-${new Date().toISOString().split("T")[0]}.png`;
+                      link.href = previewContent;
+                      link.click();
+                      closePreview();
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm text-sm font-medium"
+                  >
+                    Descargar Imagen
+                  </button>
+                  <button
+                    onClick={closePreview}
+                    className="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex-1 overflow-auto p-8 bg-gray-200 flex justify-center items-start">
+                {previewType === "image" && (
+                  <div className="shadow-2xl rounded-lg overflow-hidden bg-white">
+                     <img
+                      src={previewContent}
+                      alt="Preview"
+                      className="max-w-full object-contain"
+                      style={{ maxHeight: "80vh" }}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
