@@ -626,8 +626,8 @@ export default function HomePage() {
               <div className="aspect-w-16 aspect-h-9 md:aspect-h-16 overflow-hidden rounded-md">
                 <iframe
                   src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid=100057713580575ss&tabs=timeline&width=500&height=500&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true&appId"
-                  width="500"
-                  height="500"
+                  width="550"
+                  height="700"
                   style={{ border: "none", overflow: "hidden" }}
                   scrolling="no"
                   frameBorder="0"
