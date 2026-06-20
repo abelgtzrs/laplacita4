@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Plus, Edit, Trash2, MessageSquare, AlertCircle, Megaphone } from "lucide-react"
+import AdminHeroSlideManager from "@/components/admin-hero-slide-manager"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -103,6 +104,8 @@ export default function AdminCommunicationsPage() {
             </Link>
           </Button>
         </div>
+
+        <AdminHeroSlideManager />
 
         {/* Communications List */}
         {loading ? (

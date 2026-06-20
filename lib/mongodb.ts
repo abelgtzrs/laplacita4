@@ -391,6 +391,157 @@ export async function deleteCommunication(id: string): Promise<boolean> {
   }
 }
 
+// Hero Slide interface
+export interface HeroSlide {
+  _id?: ObjectId;
+  title?: string;
+  image_url: string;
+  is_active: boolean;
+  sort_order: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+// Hero Slide operations
+export async function getHeroSlides(activeOnly = false): Promise<HeroSlide[]> {
+  try {
+    const db = await getDatabase();
+    const collection = db.collection<HeroSlide>("hero_slides");
+
+    const filter: Record<string, unknown> = {};
+    if (activeOnly) {
+      filter.is_active = true;
+    }
+
+    const heroSlides = await collection
+      .find(filter)
+      .sort({ sort_order: 1, created_at: -1 })
+      .toArray();
+    return heroSlides;
+  } catch (error) {
+    console.error("Error fetching hero slides:", error);
+    return [];
+  }
+}
+
+export async function getHeroSlideById(id: string): Promise<HeroSlide | null> {
+  try {
+    const db = await getDatabase();
+    const collection = db.collection<HeroSlide>("hero_slides");
+    const heroSlide = await collection.findOne({ _id: new ObjectId(id) });
+    return heroSlide;
+  } catch (error) {
+    console.error("Error fetching hero slide:", error);
+    return null;
+  }
+}
+
+export async function createHeroSlide(
+  heroSlide: Omit<HeroSlide, "_id" | "created_at" | "updated_at">
+): Promise<HeroSlide> {
+  try {
+    const db = await getDatabase();
+    const collection = db.collection<HeroSlide>("hero_slides");
+
+    const newHeroSlide: HeroSlide = {
+      ...heroSlide,
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+
+    const result = await collection.insertOne(newHeroSlide as any);
+    return { ...newHeroSlide, _id: result.insertedId };
+  } catch (error) {
+    console.error("Error creating hero slide:", error);
+    throw error;
+  }
+}
+
+export async function updateHeroSlide(
+  id: string,
+  heroSlide: Partial<HeroSlide>
+): Promise<HeroSlide | null> {
+  try {
+    const db = await getDatabase();
+    const collection = db.collection<HeroSlide>("hero_slides");
+
+    const { _id, ...updateFields } = heroSlide;
+    const updateData = {
+      ...updateFields,
+      updated_at: new Date(),
+    };
+
+    const result = await collection.findOneAndUpdate(
+      { _id: new ObjectId(id) },
+      { $set: updateData },
+      { returnDocument: "after" }
+    );
+
+    return result;
+  } catch (error) {
+    console.error("Error updating hero slide:", error);
+    throw error;
+  }
+}
+
+export async function deleteHeroSlide(id: string): Promise<boolean> {
+  try {
+    const db = await getDatabase();
+    const collection = db.collection<HeroSlide>("hero_slides");
+    const result = await collection.deleteOne({ _id: new ObjectId(id) });
+    return result.deletedCount > 0;
+  } catch (error) {
+    console.error("Error deleting hero slide:", error);
+    return false;
+  }
+}
+
+interface HeroSlideSetting {
+  _id?: ObjectId;
+  key: "hero_slides_bootstrapped";
+  value: boolean;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export async function getHeroSlidesBootstrapped(): Promise<boolean> {
+  try {
+    const db = await getDatabase();
+    const collection = db.collection<HeroSlideSetting>("site_settings");
+    const setting = await collection.findOne({ key: "hero_slides_bootstrapped" });
+    return setting?.value === true;
+  } catch (error) {
+    console.error("Error fetching hero slide bootstrap setting:", error);
+    return false;
+  }
+}
+
+export async function setHeroSlidesBootstrapped(value: boolean): Promise<void> {
+  try {
+    const db = await getDatabase();
+    const collection = db.collection<HeroSlideSetting>("site_settings");
+    const now = new Date();
+
+    await collection.updateOne(
+      { key: "hero_slides_bootstrapped" },
+      {
+        $set: {
+          key: "hero_slides_bootstrapped",
+          value,
+          updated_at: now,
+        },
+        $setOnInsert: {
+          created_at: now,
+        },
+      },
+      { upsert: true }
+    );
+  } catch (error) {
+    console.error("Error updating hero slide bootstrap setting:", error);
+    throw error;
+  }
+}
+
 // Exchange Rate interface
 export interface ExchangeRate {
   _id?: ObjectId;

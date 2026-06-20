@@ -81,6 +81,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/language-context";
 import ImageSlideshow from "@/components/ImageSlideshow";
 import GoogleReviewsCarousel from "@/components/GoogleReviewsCarousel";
+import { DEFAULT_HERO_SLIDE_IMAGES } from "@/lib/hero-slides";
 
 // ===========================
 // CONSTANTS & CONFIGURATION
@@ -90,12 +91,7 @@ import GoogleReviewsCarousel from "@/components/GoogleReviewsCarousel";
  * Store Images Configuration
  * Array of image paths used in the hero slideshow
  */
-const storeImages = [
-  "/store/verdura.jpg",
-  "/store/galletas.png",
-  "/store/chips.png",
-  "/store/carnes.png",
-];
+const fallbackHeroSlides = DEFAULT_HERO_SLIDE_IMAGES;
 
 // =========================
 // MAIN COMPONENT FUNCTION
@@ -125,6 +121,11 @@ export default function HomePage() {
    * Current promotions state - stores active promotions
    */
   const [currentPromotions, setCurrentPromotions] = useState([]);
+
+  /**
+   * Hero slides state - stores the slideshow images shown in the homepage banner
+   */
+  const [heroSlides, setHeroSlides] = useState<string[]>([]);
 
   /**
    * Active service state - tracks which service card is expanded on mobile
@@ -219,10 +220,11 @@ export default function HomePage() {
     async function loadData() {
       try {
         // Use Promise.all to fetch data concurrently
-        const [productsRes, promotionsRes, foodRes] = await Promise.all([
+        const [productsRes, promotionsRes, foodRes, heroSlidesRes] = await Promise.all([
           fetch("/api/admin/products?featured=true"),
           fetch("/api/admin/promotions?activeOnly=true"),
           fetch("/api/admin/products?category=Comida&featured=true"), // Fetch featured food
+          fetch("/api/admin/hero-slides?activeOnly=true"),
         ]);
 
         if (productsRes.ok) {
@@ -241,8 +243,18 @@ export default function HomePage() {
         if (foodRes.ok) setPopularFood((await foodRes.json()).slice(0, 6));
         if (promotionsRes.ok)
           setCurrentPromotions((await promotionsRes.json()).slice(0, 2));
+
+        if (heroSlidesRes.ok) {
+          const slides = await heroSlidesRes.json();
+          const slideImages = slides
+            .map((slide: { image_url?: string }) => slide.image_url)
+            .filter(Boolean);
+
+          setHeroSlides(slideImages);
+        }
       } catch (error) {
         console.error("Error loading data:", error);
+        setHeroSlides(fallbackHeroSlides);
       }
     }
     loadData();
@@ -261,7 +273,11 @@ export default function HomePage() {
         {/* Background Slideshow with Gradient Overlay */}
         <div className="absolute inset-0">
           <div className="relative h-full w-full">
-            <ImageSlideshow slides={storeImages} />
+            {heroSlides.length > 0 ? (
+              <ImageSlideshow slides={heroSlides} />
+            ) : (
+              <div className="h-full w-full bg-[radial-gradient(circle_at_top,_rgba(34,197,94,0.35),_rgba(17,24,39,0.95)_68%)]" />
+            )}
             {/* Gradient Overlay for Text Readability */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30 backdrop-blur-[2px]" />
           </div>
