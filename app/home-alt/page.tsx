@@ -21,6 +21,7 @@ import {
   Phone,
 } from "lucide-react";
 
+import FacebookProfileCard from "@/components/FacebookProfileCard";
 import { useLanguage } from "@/contexts/language-context";
 import ImageSlideshow from "@/components/ImageSlideshow";
 
@@ -983,26 +984,28 @@ export default function HomeAltPage() {
                   Stay updated with our latest offers, new arrivals, and
                   community events. Join our growing family on Facebook!
                 </p>
-                <div
-                  className="overflow-hidden rounded-2xl border"
-                  style={{
-                    borderColor: "#ede3d3",
-                    boxShadow: "0 2px 16px rgba(0,0,0,0.07)",
-                  }}
-                >
-                  <div className="aspect-video w-full">
-                    <iframe
-                      src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D61576133441458&tabs=timeline&width=500&height=500&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true&appId"
-                      width="100%"
-                      height="100%"
-                      style={{ border: "none", overflow: "hidden" }}
-                      scrolling="no"
-                      frameBorder={0}
-                      allowFullScreen
-                      allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                    />
-                  </div>
-                </div>
+                <FacebookProfileCard
+                  facebookUrl="https://www.facebook.com/people/La-Placita-FTP/61576133441458/"
+                  headline={
+                    language === "es"
+                      ? "Mantente al dia con La Placita FTP"
+                      : "Stay up to date with La Placita FTP"
+                  }
+                  description={
+                    language === "es"
+                      ? "Visita nuestro Facebook para ver promociones nuevas, llegadas recientes y novedades para la comunidad."
+                      : "Visit our Facebook to see new promotions, recent arrivals, and community updates."
+                  }
+                  buttonLabel={
+                    language === "es" ? "Abrir Facebook" : "Open Facebook"
+                  }
+                  note={
+                    language === "es"
+                      ? "La experiencia completa de publicaciones se abre directamente en Facebook."
+                      : "The full posts experience opens directly in Facebook."
+                  }
+                  className="min-h-[320px] rounded-2xl"
+                />
               </div>
             </div>
           </div>

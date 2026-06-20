@@ -712,18 +712,21 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="overflow-hidden rounded-xl bg-gray-50 flex-grow w-full relative">
+              <div className="overflow-hidden rounded-xl bg-gray-50 flex-grow w-full">
                 <iframe
-                  src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid=100057713580575ss&tabs=timeline&width=500&height=500&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true&appId"
-                  width="550"
-                  height="700"
-                  style={{ border: "none", overflow: "hidden" }}
+                  src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php?id=100057713580575&tabs=timeline&width=500&height=800&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true&appId"
+                  width="100%"
+                  style={{
+                    border: "none",
+                    overflow: "hidden",
+                    minHeight: "500px",
+                  }}
                   scrolling="no"
                   frameBorder="0"
                   allowFullScreen={true}
                   allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                  className="w-full h-full min-h-[360px] sm:min-h-[500px]"
-                ></iframe>
+                  className="w-full min-h-[500px]"
+                />
               </div>
             </div>
           </div>
