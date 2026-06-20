@@ -6,7 +6,7 @@ import "./styles/slideshow.css";
 import { LanguageProvider } from "@/contexts/language-context";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
-import { initializeDatabase } from "@/lib/db";
+// import { initializeDatabase } from "@/lib/db";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -14,10 +14,13 @@ export const metadata: Metadata = {
   title: "La Placita FTP - Community Grocery & Services Hub",
   description:
     "Your trusted community grocery store and service center in Fort Pierce, Florida. Authentic Hispanic groceries, prepared foods, and essential services.",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 // Initialize database on app start
-initializeDatabase();
+// initializeDatabase();
 
 export default function RootLayout({
   children,

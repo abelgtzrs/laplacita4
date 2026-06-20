@@ -91,10 +91,10 @@ import GoogleReviewsCarousel from "@/components/GoogleReviewsCarousel";
  * Array of image paths used in the hero slideshow
  */
 const storeImages = [
+  "/store/verdura.jpg",
   "/store/galletas.png",
   "/store/chips.png",
   "/store/carnes.png",
-  "/store/verdura.jpg",
 ];
 
 // =========================
@@ -232,9 +232,9 @@ export default function HomePage() {
             allFeatured
               .filter(
                 (p: any) =>
-                  p.category_es !== "Comida" && p.category_en !== "Food"
+                  p.category_es !== "Comida" && p.category_en !== "Food",
               )
-              .slice(0, 6)
+              .slice(0, 6),
           );
         }
 
@@ -257,35 +257,35 @@ export default function HomePage() {
       {/* ================================================ */}
       {/* HERO SECTION                                     */}
       {/* ================================================ */}
-      {/* 
-        Hero section with image slideshow background
-        - Features store images rotating in slideshow
-        - Overlaid with welcome text and call-to-action buttons
-        - Responsive design for mobile and desktop
-      */}
-      <section className="relative h-[500px] md:h-[600px] overflow-hidden">
+      <section className="relative h-[460px] sm:h-[520px] lg:h-[800px] overflow-hidden">
+        {/* Background Slideshow with Gradient Overlay */}
         <div className="absolute inset-0">
-          <div className="relative h-full bg-gradient-to-r from-green-600 via-yellow-500 to-red-600">
+          <div className="relative h-full w-full">
             <ImageSlideshow slides={storeImages} />
-            <div className="h-full flex items-center justify-center"></div>
+            {/* Gradient Overlay for Text Readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30 backdrop-blur-[2px]" />
           </div>
         </div>
-        <div className="relative z-20 h-full flex items-center">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 text-shadow-xl bg-color-red-600 drop-shadow-[0_3px_2px_rgba(0,0,0,0.8)]">
-              {t("home.welcome")}
+
+        {/* Hero Content */}
+        <div className="relative z-20 h-full flex flex-col justify-center items-center text-center px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in zoom-in duration-1000">
+            <h1 className="text-3xl sm:text-5xl md:text-7xl font-extrabold text-white tracking-tight drop-shadow-2xl">
+              <span className="block text-white mb-2">{t("home.welcome")}</span>
             </h1>
-            <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto drop-shadow-[0_3px_2px_rgba(0,0,0,0.8)]">
+
+            <p className="text-lg md:text-2xl text-gray-200 max-w-2xl mx-auto leading-relaxed drop-shadow-md">
               {t("home.subtitle")}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
               <Button
                 asChild
                 size="lg"
-                className="bg-white text-green-600 hover:bg-gray-100"
+                className="bg-green-600 hover:bg-green-700 text-white border-none shadow-lg hover:shadow-green-500/30 transition-all duration-300 transform hover:-translate-y-1 text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 rounded-full"
               >
                 <Link href="/productos">
-                  <ShoppingCart className="mr-2 h-5 w-5" />
+                  <ShoppingCart className="mr-2 h-6 w-6" />
                   {t("home.view_products")}
                 </Link>
               </Button>
@@ -293,164 +293,206 @@ export default function HomePage() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="border-white text-green-600 hover:bg-white hover:text-green-600"
+                className="bg-white backdrop-blur-md border-white/50 text-green-600 hover:bg-gray-200 hover:text-green-700 shadow-lg transition-all duration-300 transform hover:-translate-y-1 text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 rounded-full"
               >
                 <Link href="/servicios">
-                  <CreditCard className="mr-2 h-5 w-5" />
+                  <CreditCard className="mr-2 h-6 w-6" />
                   {t("home.our_services")}
                 </Link>
               </Button>
             </div>
           </div>
         </div>
+
+        {/* Bottom Wave Decoration (SVG) */}
+        <div className="absolute bottom-0 left-0 right-0 z-20">
+          <svg
+            className="w-full h-12 md:h-24 fill-gray-50"
+            viewBox="0 0 1440 320"
+            preserveAspectRatio="none"
+          >
+            <path d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+          </svg>
+        </div>
       </section>
 
       {/* ================================================ */}
-      {/* FEATURED PRODUCTS & POPULAR FOOD SECTION        */}
+      {/* FEATURED PRODUCTS SECTION                        */}
       {/* ================================================ */}
-      {/* 
-        Dual-column layout featuring:
-        - Left: Featured Products (non-food items)
-        - Right: Popular Food Items
-        - Responsive grid layout with product cards
-        - Loading states with skeleton animations
-      */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 sm:py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-16">
-            {/* ========================================== */}
-            {/* LEFT COLUMN: FEATURED PRODUCTS            */}
-            {/* ========================================== */}
-            {/* 
-              Non-food featured products display
-              - Product cards with images and pricing
-              - Skeleton loading states
-              - Link to all products page
-            */}
+          <div className="flex flex-col md:flex-row justify-between items-center mb-12">
             <div>
-              <div className="text-center lg:text-left mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                  {t("home.featured_products")}
-                </h2>
-                <div className="w-24 h-1 bg-gradient-to-r from-green-500 to-red-500 mx-auto lg:mx-0"></div>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-                {featuredProducts.length > 0
-                  ? featuredProducts.map((product: any) => (
-                      <Card
-                        key={product._id}
-                        className="overflow-hidden hover:shadow-lg transition-shadow"
-                      >
-                        <div className="aspect-square relative bg-gray-200">
-                          <Image
-                            src={product.image_url || "/placeholder.svg"}
-                            alt={
-                              language === "es"
-                                ? product.name_es
-                                : product.name_en
-                            }
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <CardContent className="p-3">
-                          <h3 className="font-semibold text-sm mb-1 line-clamp-2">
-                            {language === "es"
-                              ? product.name_es
-                              : product.name_en}
-                          </h3>
-                          <p className="text-lg font-bold text-green-600">
-                            ${product.price}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    ))
-                  : Array.from({ length: 6 }).map((_, i) => (
-                      <Card key={i} className="overflow-hidden animate-pulse">
-                        <div className="aspect-square bg-gray-200"></div>
-                        <CardContent className="p-3 space-y-2">
-                          <div className="h-4 bg-gray-200 rounded"></div>
-                          <div className="h-5 w-1/2 bg-gray-200 rounded"></div>
-                        </CardContent>
-                      </Card>
-                    ))}
-              </div>
-              <div className="text-center lg:text-left">
-                <Button asChild variant="outline" size="lg">
-                  <Link href="/productos">
-                    Ver Todos los Productos{" "}
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                </Button>
-              </div>
+              <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight">
+                {t("home.featured_products")}
+              </h2>
+              <div className="h-1 w-24 bg-green-500 rounded mt-2"></div>
             </div>
+            <Button
+              asChild
+              variant="ghost"
+              className="hidden md:flex text-green-600 hover:text-green-700 hover:bg-green-50"
+            >
+              <Link href="/productos" className="flex items-center gap-2">
+                Ver Todos los Productos <ArrowRight className="h-5 w-5" />
+              </Link>
+            </Button>
+          </div>
 
-            {/* ========================================== */}
-            {/* RIGHT COLUMN: POPULAR FOOD                */}
-            {/* ========================================== */}
-            {/* 
-              Popular food items display
-              - Featured food products with images and pricing
-              - Skeleton loading states while data loads
-              - Link to food menu page
-            */}
-            <div>
-              <div className="text-center lg:text-left mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                  {t("food.title")} Popular
-                </h2>
-                <div className="w-24 h-1 bg-gradient-to-r from-yellow-500 to-orange-500 mx-auto lg:mx-0"></div>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-                {popularFood.length > 0
-                  ? popularFood.map((product: any) => (
-                      <Card
-                        key={product._id}
-                        className="overflow-hidden hover:shadow-lg transition-shadow"
-                      >
-                        <div className="aspect-square relative bg-gray-200">
-                          <Image
-                            src={product.image_url || "/placeholder.svg"}
-                            alt={
-                              language === "es"
-                                ? product.name_es
-                                : product.name_en
-                            }
-                            fill
-                            className="object-cover"
-                          />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 xl:gap-8">
+            {featuredProducts.length > 0
+              ? featuredProducts.slice(0, 4).map((product: any) => (
+                  <Card
+                    key={product._id}
+                    className="group overflow-hidden bg-white border-0 shadow-sm hover:shadow-xl transition-all duration-300 rounded-2xl transform hover:-translate-y-1"
+                  >
+                    <div className="aspect-square relative overflow-hidden bg-gray-100">
+                      <Image
+                        src={product.image_url || "/placeholder.svg"}
+                        alt={
+                          language === "es" ? product.name_es : product.name_en
+                        }
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                      {/* Quick Add Overlay */}
+                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <Button
+                          size="sm"
+                          className="bg-white text-green-600 hover:bg-green-50 rounded-full font-bold"
+                        >
+                          Ver Detalles
+                        </Button>
+                      </div>
+                    </div>
+                    <CardContent className="p-5">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-bold text-gray-800 line-clamp-2 text-base group-hover:text-green-600 transition-colors">
+                          {language === "es"
+                            ? product.name_es
+                            : product.name_en}
+                        </h3>
+                      </div>
+                      <p className="text-xl font-extrabold text-green-600">
+                        ${product.price}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))
+              : Array.from({ length: 4 }).map((_, i) => (
+                  <Card
+                    key={i}
+                    className="rounded-2xl border-0 shadow-sm overflow-hidden"
+                  >
+                    <div className="aspect-square bg-gray-200 animate-pulse"></div>
+                    <CardContent className="p-5 space-y-3">
+                      <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+                      <div className="h-6 w-1/3 bg-gray-200 rounded animate-pulse"></div>
+                    </CardContent>
+                  </Card>
+                ))}
+          </div>
+
+          {/* Mobile View All Button */}
+          <div className="mt-8 text-center md:hidden">
+            <Button
+              asChild
+              variant="outline"
+              className="w-full border-green-500 text-green-600"
+            >
+              <Link href="/productos">Ver Todos</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================ */}
+      {/* POPULAR FOOD SECTION                             */}
+      {/* ================================================ */}
+      <section className="py-16 sm:py-20 bg-white relative overflow-hidden">
+        {/* Subtle Pattern Background */}
+        <div className="absolute inset-0 opacity-5 pointer-events-none bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]"></div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-16">
+            <span className="text-orange-500 font-bold tracking-wider uppercase text-sm">
+              Delicious & Fresh
+            </span>
+            <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mt-2">
+              {t("food.title")} <span className="text-orange-500">Popular</span>
+            </h2>
+            <div className="w-24 h-1.5 bg-orange-500 mx-auto mt-4 rounded-full"></div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {popularFood.length > 0
+              ? popularFood.map((product: any) => (
+                  <Card
+                    key={product._id}
+                    className="flex flex-col md:flex-row overflow-hidden border-0 shadow-md sm:shadow-lg hover:shadow-2xl transition-all duration-300 rounded-xl sm:rounded-2xl group bg-white h-full"
+                  >
+                    <div className="w-full md:w-2/5 relative aspect-video md:aspect-auto">
+                      <Image
+                        src={product.image_url || "/placeholder.svg"}
+                        alt={
+                          language === "es" ? product.name_es : product.name_en
+                        }
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                    </div>
+                    <CardContent className="p-5 sm:p-6 md:w-3/5 flex flex-col justify-center">
+                      <div className="mb-auto">
+                        <div className="flex items-center gap-1 mb-2">
+                          <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                          <span className="text-xs font-semibold text-gray-500">
+                            Top Rated
+                          </span>
                         </div>
-                        <CardContent className="p-3">
-                          <h3 className="font-semibold text-sm mb-1 line-clamp-2">
-                            {language === "es"
-                              ? product.name_es
-                              : product.name_en}
-                          </h3>
-                          <p className="text-lg font-bold text-green-600">
-                            ${product.price}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    ))
-                  : Array.from({ length: 6 }).map((_, i) => (
-                      <Card key={i} className="overflow-hidden animate-pulse">
-                        <div className="aspect-square bg-gray-200"></div>
-                        <CardContent className="p-3 space-y-2">
-                          <div className="h-4 bg-gray-200 rounded"></div>
-                          <div className="h-5 w-1/2 bg-gray-200 rounded"></div>
-                        </CardContent>
-                      </Card>
-                    ))}
-              </div>
-              <div className="text-center lg:text-left">
-                <Button asChild variant="outline" size="lg">
-                  <Link href="/comida">
-                    Ver Todo el Menú
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                </Button>
-              </div>
-            </div>
+                        <h3 className="font-bold text-xl text-gray-900 mb-2 group-hover:text-orange-500 transition-colors">
+                          {language === "es"
+                            ? product.name_es
+                            : product.name_en}
+                        </h3>
+                        <p className="text-sm text-gray-500 line-clamp-2 mb-4">
+                          {language === "es"
+                            ? product.description_es
+                            : product.description_en}
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-between mt-3 sm:mt-4 border-t pt-3 sm:pt-4 border-gray-100">
+                        <span className="text-2xl font-black text-orange-500">
+                          ${product.price}
+                        </span>
+                        <Button
+                          size="icon"
+                          className="rounded-full bg-orange-100 text-orange-600 hover:bg-orange-500 hover:text-white transition-colors"
+                        >
+                          <ArrowRight className="h-5 w-5" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              : Array.from({ length: 3 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-48 bg-gray-100 rounded-2xl animate-pulse"
+                  ></div>
+                ))}
+          </div>
+
+          <div className="mt-12 text-center">
+            <Button
+              asChild
+              size="lg"
+              className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-8 shadow-lg shadow-orange-200"
+            >
+              <Link href="/comida" className="flex items-center gap-2">
+                <Utensils className="h-5 w-5" />
+                Ver Todo el Menú
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -458,24 +500,21 @@ export default function HomePage() {
       {/* ================================================ */}
       {/* INTERACTIVE SERVICES SECTION                   */}
       {/* ================================================ */}
-      {/* 
-        Interactive service cards showcase
-        - 6 main services with partner logos
-        - Hover effects and mobile tap-to-expand
-        - Responsive grid layout (1 to 6 columns based on screen size)
-        - Partner logos display on hover/tap
-      */}
-      <section className="py-16 bg-white">
+      <section className="py-16 sm:py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-4xl font-extrabold text-gray-900 mb-6 relative inline-block">
               {t("home.our_services")}
+              <div className="absolute -bottom-2 left-0 right-0 h-1.5 bg-gradient-to-r from-green-400 to-green-600 rounded-full"></div>
             </h2>
-            <div className="w-24 h-1 bg-gradient-to-r from-green-500 to-red-500 mx-auto"></div>
+            <p className="text-lg text-gray-600">
+              More than just a store — we offer essential services to make your
+              life easier.
+            </p>
           </div>
 
-          {/* Service Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-6">
+          {/* Service Cards Grid - Improved Layout */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
             {services.map((service, index) => {
               const ServiceIcon = service.icon;
               const isActive = activeService === index;
@@ -483,51 +522,67 @@ export default function HomePage() {
               return (
                 <div
                   key={index}
-                  // onClick handler for mobile tap
                   onClick={() => handleServiceClick(index)}
-                  className="group relative rounded-lg border-2 border-gray-100 p-6 text-center transition-all duration-300 hover:border-green-500 hover:shadow-xl cursor-pointer"
+                  className={`
+                    group relative bg-white rounded-xl sm:rounded-2xl p-6 sm:p-8 transition-all duration-300 cursor-pointer overflow-hidden
+                    ${isActive ? "ring-2 ring-green-500 shadow-2xl scale-[1.02]" : "hover:shadow-xl hover:-translate-y-1 border border-gray-100"}
+                  `}
                 >
-                  <div className="flex flex-col items-center">
-                    <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110">
-                      <ServiceIcon className="h-8 w-8 text-green-600" />
+                  {/* Hover Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                  <div className="relative z-10 flex flex-col items-center text-center">
+                    <div className="mb-6 p-3 sm:p-4 bg-green-100 rounded-2xl group-hover:bg-green-600 transition-colors duration-300">
+                      <ServiceIcon className="h-9 w-9 sm:h-10 sm:w-10 text-green-600 group-hover:text-white transition-colors duration-300" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-800">
+
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-green-700 transition-colors">
                       {t(service.titleKey)}
                     </h3>
-                  </div>
 
-                  {/* Expanding section with conditional class for mobile */}
-                  <div
-                    className={`pt-4 max-h-0 overflow-hidden transition-all duration-500 ease-in-out group-hover:max-h-96 ${
-                      isActive ? "max-h-96" : ""
-                    }`}
-                  >
-                    <p className="text-gray-600 text-sm mb-4">
-                      {t(service.descriptionKey)}
-                    </p>
-                    {service.partners.length > 0 && (
-                      <div className="border-t border-gray-200 pt-4">
-                        <h4 className="text-xs font-bold text-gray-500 uppercase mb-3">
-                          Nuestros Socios
-                        </h4>
-                        <div className="flex flex-wrap gap-4 items-center justify-center">
-                          {service.partners.map((partner) => (
-                            <div
-                              key={partner.name}
-                              className="relative h-8 w-16"
-                            >
-                              <Image
-                                src={partner.logoUrl}
-                                alt={partner.name}
-                                fill
-                                className="object-contain"
-                                sizes="10vw"
-                              />
-                            </div>
-                          ))}
+                    <div
+                      className={`
+                      overflow-hidden transition-all duration-500 ease-in-out w-full
+                      ${isActive ? "max-h-96 opacity-100 mt-4" : "max-h-0 opacity-0 group-hover:max-h-96 group-hover:opacity-100 group-hover:mt-4"}
+                    `}
+                    >
+                      <p className="text-gray-600 mb-6 leading-relaxed">
+                        {t(service.descriptionKey)}
+                      </p>
+
+                      {service.partners.length > 0 && (
+                        <div className="border-t border-gray-100 pt-6 mt-2">
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">
+                            Available Providers
+                          </p>
+                          <div className="flex flex-wrap gap-4 justify-center items-center grayscale group-hover:grayscale-0 transition-all duration-500">
+                            {service.partners.map((partner) => (
+                              <div
+                                key={partner.name}
+                                className="relative h-10 w-20 hover:scale-110 transition-transform bg-white rounded-md p-1 shadow-sm"
+                              >
+                                <Image
+                                  src={partner.logoUrl}
+                                  alt={partner.name}
+                                  fill
+                                  className="object-contain"
+                                  sizes="80px"
+                                />
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
+
+                    {/* Read More Indicator (Visible when collapsed) */}
+                    <div
+                      className={`mt-4 ${isActive ? "hidden" : "group-hover:hidden"}`}
+                    >
+                      <span className="text-green-500 text-sm font-medium flex items-center">
+                        More Info <ArrowRight className="ml-1 h-3 w-3" />
+                      </span>
+                    </div>
                   </div>
                 </div>
               );
@@ -537,102 +592,141 @@ export default function HomePage() {
       </section>
 
       {/* ================================================ */}
-      {/* WHATSAPP PRINTING SERVICE SECTION             */}
+      {/* BRANDED WHATSAPP PROMO SECTION                 */}
       {/* ================================================ */}
-      {/* 
-        WhatsApp printing service promotion
-        - Call-to-action for document printing service
-        - Direct link to WhatsApp business number
-        - Instructions for formatting print requests
-      */}
-      <section className="py-16 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="bg-green-50 border-2 border-green-200 rounded-lg p-8">
-            <div className="bg-green-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-              <MessageCircle className="h-8 w-8 text-white" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              {t("whatsapp.title")}
-            </h2>
-            <p className="text-lg text-gray-700 mb-6">
-              {t("whatsapp.subtitle")}
-            </p>
+      <section className="py-16 sm:py-20 relative overflow-hidden bg-gradient-to-br from-green-600 to-emerald-800 text-white">
+        {/* Decorative Circles */}
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-white/10 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-white/10 blur-3xl"></div>
+
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+          <div className="inline-flex items-center justify-center p-4 bg-white/20 backdrop-blur-sm rounded-full mb-8 animate-bounce delay-700">
+            <Printer className="h-8 w-8 text-white" />
+          </div>
+
+          <h2 className="text-4xl md:text-5xl font-extrabold mb-6 drop-shadow-lg">
+            {t("whatsapp.title")}
+          </h2>
+
+          <p className="text-xl md:text-2xl text-green-50 max-w-2xl mx-auto mb-10 font-light">
+            {t("whatsapp.subtitle")}
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
             <Button
               asChild
               size="lg"
-              className="bg-green-500 hover:bg-green-600"
+              className="bg-white text-green-700 hover:bg-gray-100 text-base sm:text-lg px-6 py-5 sm:px-8 sm:py-7 rounded-full shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all"
             >
               <a
                 href="https://wa.me/7722421416"
                 target="_blank"
                 rel="noopener noreferrer"
+                className="flex items-center gap-3"
               >
-                <MessageCircle className="mr-2 h-5 w-5" />
-                {t("whatsapp.button")}
+                <div className="bg-green-500 text-white rounded-full p-1">
+                  <MessageCircle className="h-5 w-5" />
+                </div>
+                <span>{t("whatsapp.button")}</span>
               </a>
             </Button>
-            <p className="text-sm text-gray-600 mt-4">{t("whatsapp.format")}</p>
           </div>
+
+          <p className="mt-8 text-sm text-green-200/80 bg-black/20 inline-block px-4 py-2 rounded-lg backdrop-blur-sm">
+            {t("whatsapp.format")}
+          </p>
         </div>
       </section>
 
       {/* ================================================ */}
       {/* LOCATION MAP & FACEBOOK FEED SECTION           */}
       {/* ================================================ */}
-      {/* 
-        Dual-column layout featuring:
-        - Left: Interactive Google Maps embed showing store location
-        - Right: Facebook page feed for social media integration
-        - Business address and contact information
-      */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t("fb")}</h2>
-            <p className="text-lg text-gray-600">
-              1508 Delaware Ave, Fort Pierce, FL 34950
-            </p>
-            <div className="w-24 h-1 bg-gradient-to-r from-green-500 to-red-500 mx-auto mt-4"></div>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* ========================================== */}
-            {/* LEFT COLUMN: GOOGLE MAP                    */}
-            {/* ========================================== */}
-            {/* 
-              Interactive Google Maps embed
-              - Shows exact store location
-              - Allows users to get directions
-              - Responsive iframe with proper aspect ratio
-            */}
-            <div className="aspect-w-16 aspect-h-9 bg-gray-200 rounded-lg overflow-hidden shadow-xl">
-              <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3540.816216717518!2d-80.3419831237173!3d27.443837776334753!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x88def194f69636f3%3A0x3b810b158ab0f8dc!2sLa%20Placita%20FTP!5e0!3m2!1sen!2sus!4v1749439130255!5m2!1sen!2sus"
-                width="600"
-                height="576"
-                loading="lazy"
-              ></iframe>
+      <section className="py-16 sm:py-24 bg-gray-50 relative overflow-hidden">
+        {/* Background Decoration */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+            {/* Left Column: Map & Info */}
+            <div className="space-y-8">
+              <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 transform hover:scale-[1.01] transition-transform duration-300">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="p-3 bg-red-100 rounded-full text-red-600">
+                    <MapPin className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      {t("contact.title")}
+                    </h2>
+                    <p className="text-gray-500">Come visit us today!</p>
+                  </div>
+                </div>
+
+                <div className="aspect-w-16 aspect-h-9 w-full h-[300px] sm:h-[380px] lg:h-[420px] bg-gray-200 rounded-2xl overflow-hidden shadow-inner mb-6 relative group">
+                  <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3540.816216717518!2d-80.3419831237173!3d27.443837776334753!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x88def194f69636f3%3A0x3b810b158ab0f8dc!2sLa%20Placita%20FTP!5e0!3m2!1sen!2sus!4v1749439130255!5m2!1sen!2sus"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    loading="lazy"
+                    className="absolute inset-0 w-full h-full grayscale group-hover:grayscale-0 transition-all duration-700"
+                  ></iframe>
+                </div>
+
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-red-500" />
+                    <span>1508 Delaware Ave, Fort Pierce, FL 34950</span>
+                  </div>
+                  <Button
+                    asChild
+                    variant="link"
+                    className="text-red-500 p-0 h-auto font-semibold hover:text-red-600"
+                  >
+                    <a
+                      href="https://maps.google.com?q=La+Placita+FTP"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center"
+                    >
+                      Get Directions <ArrowRight className="ml-1 h-3 w-3" />
+                    </a>
+                  </Button>
+                </div>
+              </div>
             </div>
 
-            {/* ========================================== */}
-            {/* RIGHT COLUMN: FACEBOOK FEED               */}
-            {/* ========================================== */}
-            {/* 
-              Facebook page feed integration
-              - Displays latest posts from business page
-              - Social proof and community engagement
-              - Embedded Facebook page plugin
-            */}
-            <div className="rounded-lg shadow-xl bg-white p-4">
-              <div className="aspect-w-16 aspect-h-9 md:aspect-h-16 overflow-hidden rounded-md">
+            {/* Right Column: Facebook Feed */}
+            <div className="bg-white p-6 rounded-3xl shadow-xl border border-gray-100 h-full min-h-[360px] sm:min-h-[500px] transform hover:scale-[1.01] transition-transform duration-300 flex flex-col">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="p-3 bg-blue-100 rounded-full text-blue-600">
+                  <Facebook className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {t("fb")}
+                  </h2>
+                  <p className="text-gray-500">Follow us for updates!</p>
+                </div>
+              </div>
+
+              <div className="overflow-hidden rounded-xl bg-gray-50 flex-grow w-full relative">
                 <iframe
-                  src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D61576133441458&tabs=timeline&width=500&height=500&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true&appId"
-                  width="500"
-                  height="500"
-                  style={{ border: "none", overflow: "hidden" }}
+                  src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php?id=100057713580575&tabs=timeline&width=500&height=800&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true&appId"
+                  width="100%"
+                  height="100%"
+                  style={{
+                    border: "none",
+                    overflow: "hidden",
+                    minHeight: "500px",
+                  }}
                   scrolling="no"
                   frameBorder="0"
                   allowFullScreen={true}
                   allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                  className="w-full h-full min-h-[360px] sm:min-h-[500px]"
                 ></iframe>
               </div>
             </div>
@@ -643,28 +737,39 @@ export default function HomePage() {
       {/* ================================================ */}
       {/* GOOGLE REVIEWS CAROUSEL SECTION               */}
       {/* ================================================ */}
-      {/* 
-        Customer reviews and testimonials
-        - Displays Google reviews in a carousel format
-        - Shows customer feedback and ratings
-        - Builds trust and social proof
-      */}
+      <section className="py-16 sm:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+              Our Customers
+            </h2>
+            <div className="flex justify-center gap-1 mb-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Star
+                  key={i}
+                  className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-400 fill-yellow-400"
+                />
+              ))}
+            </div>
+          </div>
+          <GoogleReviewsCarousel />
+        </div>
+      </section>
 
       {/* ================================================ */}
       {/* ABOUT SNIPPET SECTION                          */}
       {/* ================================================ */}
-      {/* 
-        Brief company history and description
-        - Provides context about La Placita FTP
-        - Builds trust and credibility
-        - Styled with gradient background
-      */}
-      <section className="py-16 bg-gradient-to-r from-green-50 to-red-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">
+      <section className="py-16 sm:py-24 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-green-900 to-green-800 z-0"></div>
+        {/* Abstract Shapes */}
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-white/5 skew-x-12 transform origin-bottom-left"></div>
+
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 text-white">
+          <div className="w-20 h-1 bg-green-500 mx-auto mb-8 rounded-full"></div>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-8 leading-tight">
             {t("home.history_title")}
           </h2>
-          <p className="text-lg text-gray-700 leading-relaxed">
+          <p className="text-lg md:text-xl text-green-50 leading-relaxed font-light mb-12">
             {t("home.about_snippet")}
           </p>
         </div>
@@ -673,28 +778,31 @@ export default function HomePage() {
       {/* ================================================ */}
       {/* CURRENT PROMOTIONS SECTION                     */}
       {/* ================================================ */}
-      {/* 
-        Active promotions display
-        - Conditional rendering based on available promotions
-        - Grid layout for multiple promotions
-        - Image and text content for each promotion
-        - Responsive design for mobile and desktop
-      */}
       {currentPromotions.length > 0 && (
-        <section className="py-16 bg-white">
+        <section className="py-16 sm:py-24 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                {t("home.current_promotions")}
-              </h2>
-              <div className="w-24 h-1 bg-gradient-to-r from-green-500 to-red-500 mx-auto"></div>
+            <div className="flex items-center justify-between mb-12">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900">
+                  {t("home.current_promotions")}
+                </h2>
+                <p className="text-gray-500 mt-2">
+                  Don't miss out on these limited time offers!
+                </p>
+              </div>
+              <Button variant="outline" className="hidden sm:flex">
+                View All Offers
+              </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
               {currentPromotions.map((promotion: any) => (
-                <Card key={promotion._id} className="overflow-hidden">
+                <Card
+                  key={promotion._id}
+                  className="overflow-hidden border-0 shadow-md sm:shadow-lg hover:shadow-2xl transition-all duration-300 group rounded-3xl"
+                >
                   {promotion.image_url && (
-                    <div className="aspect-video relative">
+                    <div className="aspect-video relative overflow-hidden">
                       <Image
                         src={promotion.image_url || "/placeholder.svg"}
                         alt={
@@ -703,22 +811,43 @@ export default function HomePage() {
                             : promotion.title_en
                         }
                         fill
-                        className="object-cover"
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
                       />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90"></div>
+                      <div className="absolute bottom-0 left-0 p-8 text-white">
+                        <div className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full inline-block mb-3">
+                          LIMITED TIME
+                        </div>
+                        <h3 className="text-3xl font-bold mb-2 leading-tight">
+                          {language === "es"
+                            ? promotion.title_es
+                            : promotion.title_en}
+                        </h3>
+                        <p className="text-gray-200 line-clamp-2 text-sm opacity-90">
+                          {language === "es"
+                            ? promotion.description_es
+                            : promotion.description_en}
+                        </p>
+                      </div>
                     </div>
                   )}
-                  <CardContent className="p-6">
-                    <h3 className="text-xl font-bold mb-2">
-                      {language === "es"
-                        ? promotion.title_es
-                        : promotion.title_en}
-                    </h3>
-                    <p className="text-gray-600">
-                      {language === "es"
-                        ? promotion.description_es
-                        : promotion.description_en}
-                    </p>
-                  </CardContent>
+                  {!promotion.image_url && (
+                    <CardContent className="p-8 bg-gradient-to-br from-green-600 to-green-800 text-white h-full flex flex-col justify-center min-h-[300px]">
+                      <h3 className="text-3xl font-bold mb-4">
+                        {language === "es"
+                          ? promotion.title_es
+                          : promotion.title_en}
+                      </h3>
+                      <p className="text-green-100 text-lg">
+                        {language === "es"
+                          ? promotion.description_es
+                          : promotion.description_en}
+                      </p>
+                      <Button className="bg-white text-green-800 mt-6 self-start hover:bg-gray-100 border-none">
+                        Learn More
+                      </Button>
+                    </CardContent>
+                  )}
                 </Card>
               ))}
             </div>
